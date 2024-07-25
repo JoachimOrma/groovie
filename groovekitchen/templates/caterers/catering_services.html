@@ -1,7 +1,8 @@
 {% extends 'utilities/layout.html' %}
-
 {% block main %}
-    <div class="container">
+
+<div class="container">
+{% if caterers %}
      <h2 class="text-center py-3 my-3 bg-light">Professional Caterers</h2>
      <div class="tab-content mb-5">
         <div class="tab-pane fade show p-0 active">
@@ -24,8 +25,14 @@
             </div>
         </div>
      </div>
-
-        <div class="row g-0 gx-5 align-items-end">
+{% else %}
+    <div class="row justify-content-center align-items-center" style="height: 250px; margin-top: 50px;">
+        <div class="col">
+            <h4 class="text-center"> No caterer found</h4>
+        </div>
+    </div>
+{% endif %}
+        <div class="row g-0 gx-5 align-items-between flex-wrap">
             <div class="col-lg-6">
                 <div class="section-header text-start mb-3 wow fadeInUp" data-wow-delay="0.1s" style="max-width: 500px;">
                     <h1 class="display-5 mb-3 mt-4">Event Gallery</h1>
@@ -34,13 +41,13 @@
             <div class="col-lg-6 text-start text-lg-end wow slideInRight" data-wow-delay="0.1s">
                 <ul class="nav nav-pills d-inline-flex justify-content-end mb-5">
                     <li class="nav-item me-2">
-                        <a class="btn btn-outline-primary border-2 active" data-bs-toggle="pill" href="#tab-0">Marriages</a>
+                        <a class="btn btn-outline-primary border-2 active" data-bs-toggle="pill">Marriages</a>
                     </li>
                     <li class="nav-item me-2">
-                        <a class="btn btn-outline-primary border-2" data-bs-toggle="pill" href="#tab-1">Birthdays</a>
+                        <a class="btn btn-outline-primary border-2" data-bs-toggle="pill">Birthdays</a>
                     </li>
                     <li class="nav-item me-0">
-                        <a class="btn btn-outline-primary border-2" data-bs-toggle="pill" href="#tab-2">Funerals</a>
+                        <a class="btn btn-outline-primary border-2" data-bs-toggle="pill">Funerals</a>
                     </li>
                 </ul>
             </div>
@@ -84,13 +91,13 @@
 
 {% endblock main %}
 {% block customJS %}
-<script>   
+<script>
     const catererCards = document.querySelectorAll('.caterer-card');
 
     catererCards.forEach(card => {
         card.addEventListener('click', () => {
             const input = card.querySelector('.caterer-input');
-            
+
             if (input) {
                 const catererId = input.value;
                 $.post({
@@ -102,7 +109,7 @@
                     }
                   })
             }
-        });   
+        });
     });
 
 </script>

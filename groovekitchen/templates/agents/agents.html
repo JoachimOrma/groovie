@@ -1,0 +1,58 @@
+{% extends 'utilities/layout.html' %}
+{% block main %}
+{% if agents %}
+    <h2 class="text-center py-3 mb-5 bg-light">Community Agents</h2>
+    <div class="tab-content">
+        <div id="tab-1" class="tab-pane fade show p-0 active">
+            <div class="row g-4 justify-content-center justify-content-md-start">
+              {% for agent in agents %}
+                {% if agent.customer_deets.dp %}
+                  <div class="col-lg-3 col-md-6 col-11 wow fadeInUp" data-wow-delay="0.1s">
+                    <div class="card agent-card">
+                        <input type="hidden" class="agent-input" name="agentId" value="{{agent.id}}" />
+                        <img src="/static/photos/{{ agent.customer_deets.dp }}" alt="..." height="210" style="object-fit: cover;">
+                        <div class="footer p-2 d-flex flex-column text-center" style="font-size: small;">
+                            <span class="h6">{{ agent.customer_deets.firstname }} {{agent.customer_deets.lastname}}</span>
+                            <span class="card-text text-format" style="background: lavender; border-radius: 4px"> {{ agent.specialities }}</span>
+                            <span class="text-muted px-2" style="font-style: italic;"><i class="fas fa-location-dot text-warning"></i> {{agent.city}}, {{agent.state }} State</span>
+                        </div>
+                    </div>
+                  </div>
+                {% endif %}
+              {% endfor %}
+            </div>
+        </div>
+    </div>
+{% else %}
+    <div class="row justify-content-center align-items-center" style="height: 250px; margin-top:50px;">
+        <div class="col">
+            <h4 class="text-center"> No community agent found</h4>
+        </div>
+    </div>
+{% endif %}
+
+{% endblock main %}
+{% block customJS %}
+<script>
+    const agentCards = document.querySelectorAll('.agent-card');
+
+    agentCards.forEach(card => {
+        card.addEventListener('click', () => {
+            const input = card.querySelector('.agent-input');
+
+            if (input) {
+              const agentId = input.value;
+              $.post({
+                url: `/agent-view-count/${agentId}`,
+                data: {"csrf_token": "{{csrf_token()}}"},
+                success: function(response){
+                  if (response.status=='success')
+                  window.location.replace(`/agent-details/${agentId}/`);
+                }
+              })
+            }
+        });
+
+    });
+</script>
+{% endblock customJS %}

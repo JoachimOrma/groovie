@@ -1,6 +1,6 @@
 {% extends 'utilities/layout.html' %}
 {% block main %}
-
+{% if chefs %}
     <h2 class="text-center py-3 mb-5 bg-light">Popular Chefs</h2>
     <div class="tab-content">
         <div id="tab-1" class="tab-pane fade show p-0 active">
@@ -23,7 +23,13 @@
             </div>
         </div>
     </div>
-
+{% else %}
+    <div class="row justify-content-center align-items-center" style="height: 250px; margin-top:50px">
+        <div class="col">
+            <h4 class="text-center"> No chef found</h4>
+        </div>
+    </div>
+{% endif %}
 {% endblock main %}
 {% block customJS %}
 <script>
@@ -32,7 +38,7 @@
     chefCards.forEach(card => {
         card.addEventListener('click', () => {
             const input = card.querySelector('.chef-input');
-            
+
             if (input) {
               const chefId = input.value;
               $.post({
@@ -45,7 +51,7 @@
               })
             }
         });
-    
+
     });
 </script>
 {% endblock customJS %}

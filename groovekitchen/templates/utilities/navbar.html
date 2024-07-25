@@ -1,9 +1,9 @@
  <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-4 px-lg-5 py-3 py-lg-0">
     <a href="{{url_for('home')}}" class="navbar-brand p-0 me-2">
-        <h4 class="text-primary m-0"><i class="fa fa-utensils"></i> Groove Kitchen | </h4>
+        <h4 class="text-primary m-0"><i class="fa fa-utensils"></i> Groove Kitchen <span class="d-none d-md-inline-block">-</span> </h4>
         <!-- <img src="img/logo.png" alt="Logo"> -->
     </a>
-    <a href="{{url_for('cart_details')}}" class="nav-item nav-link d-md-none" style="position:relative;">
+    <a href="{% if session.get('useronline') != None %}{{url_for('cart_details')}}{% else %}#{% endif %}" class="nav-item nav-link d-md-none" style="position:relative;">
         <i class="fas fa-shopping-cart text-light" style="font-size: 1.5rem"></i>
         <span style="position: absolute; right: 8px; font-size: small; border-radius: 10px" class="text-light px-2 cart_items_count bg-primary">{{number_of_cart_items}}</span>
     </a>
@@ -36,7 +36,7 @@
             </div>
             <a href="{{url_for('about_us')}}" class="nav-item nav-link {% if page=='about_us' %} active{% endif %}">About Us</a>
             {% if session.get('useronline') != None %}
-                
+
                 <div class="nav-item dropdown">
                     <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">Careers</a>
                     <div class="dropdown-menu m-0">
@@ -59,7 +59,7 @@
                     <i class="fas fa-shopping-cart" style="font-size: 1.5rem"></i>
                     <span style="position: absolute; right: -2px; font-size: x-small; border-radius: 10px" class="text-light px-2 cart_items_count bg-primary">{{number_of_cart_items}}</span>
                 </a>
-            {% else %}  
+            {% else %}
                 <div class="nav-item dropdown">
                     <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown"><i class="far fa-circle-user" style="font-size: 1.4rem;"></i></a>
                     <div class="dropdown-menu m-0">
@@ -67,11 +67,11 @@
                         <a href="{{url_for('login')}}" class="dropdown-item"><i class="fa-solid fa-right-to-bracket"></i> Login</a>
                     </div>
                 </div>
-                <a href="{{url_for('cart_details')}}" class="nav-item nav-link d-none d-md-inline-block" style="position:relative;">
+                <a href="#" class="nav-item nav-link d-none d-md-inline-block" style="position:relative;">
                     <i class="fas fa-shopping-cart" style="font-size: 1.5rem"></i>
-                    <span style="position: absolute; right: -2px; font-size: x-small; border-radius: 10px" class="text-light px-2 cart_items_count bg-primary">{{number_of_cart_items}}</span>     
+                    <span style="position: absolute; right: -2px; font-size: x-small; border-radius: 10px" class="text-light px-2 cart_items_count bg-primary">{{number_of_cart_items}}</span>
                 </a>
-            {% endif %}    
+            {% endif %}
         </div>
     </div>
 </nav>

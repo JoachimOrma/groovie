@@ -10,7 +10,7 @@
             </h6>
         </div>
         <div class="row pb-5 justify-content-center align-items-center">
-            <div class="col-lg-6 col-12 pt-3" style="border: 1px solid #777">
+            <div class="col-lg-6 col-11 pt-3" style="border: 1px solid #777">
 
                 <form action="{{url_for('registration')}}" method="post">
                     <input type="hidden" name="csrf_token" value="{{csrf_token()}}" />
@@ -59,7 +59,7 @@
         const lastname = $('#lastname').val();
         const email = $('#email').val();
         const password = $('#password').val();
-    
+
         if (firstname && lastname && email && password){
             $.ajax({
                 url: "/registration/",

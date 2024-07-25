@@ -57,10 +57,26 @@ def restaurant_details():
         number_of_cart_items = 0
         number_of_wishlist_item = 0
         customer = None
-        
+
     # restaurantid = .query.filter(Carter.id == cid).first()
     return render_template('restaurants/restaurant_details.html', title='Restaurant Details', number_of_cart_items=number_of_cart_items, customer=customer, number_of_wishlist_item=number_of_wishlist_item)
 
+@app.route('/agents/')
+def community_agents():
+    agents = CommunityAgent.query.filter_by(status='1').all()
+    if session.get('useronline'):
+        cid = session.get('useronline')
+        customer = Customer.query.get_or_404(cid)
+        cart_items = Cart.query.filter_by(customerid=customer.id).all()
+        wishlist_items = Wishlist.query.filter_by(customerid=customer.id).all()
+        number_of_wishlist_item = len(wishlist_items)
+        number_of_cart_items = len(cart_items)
+    else:
+        number_of_wishlist_item = 0
+        number_of_cart_items = 0
+        customer = None
+    return render_template('agents/agents.html', title='Community Agents', page='community_agent', agents=agents, customer=customer,
+                            number_of_wishlist_item=number_of_wishlist_item, number_of_cart_items=number_of_cart_items)
 
 @app.route('/career-as-a-community-agent/')
 def community_agent_career():
@@ -94,14 +110,14 @@ def community_agent_registration():
         phone = request.form.get('phone')
         specialities = request.form.get('specialities')
         photo_file = request.files['photo']
-        
+
         if photo_file and specialities and phone and city and state and address:
             file_name = photo_file.filename
             file_deets = file_name.split('.')
             ext = file_deets[-1]
             new_filename = token_hex(12) + '.' + ext
             photo_file.save('groovekitchen/static/photos/' + new_filename)
-            
+
             agent = CommunityAgent(
                 customerid=customer.id,
                 phone=phone,
@@ -119,7 +135,7 @@ def community_agent_registration():
             return jsonify({"status": "success"})
         else:
             return jsonify({"status": "error"})
-        
+
     return render_template('agents/community_agent_registration.html', title="Register as a community agent", customer=customer,
                         number_of_cart_items=number_of_cart_items, number_of_wishlist_item=number_of_wishlist_item)
 
@@ -138,11 +154,11 @@ def community_agent_create_product():
             image_list = []
             for photo in photos[:4]:
                 file_name = photo.filename
-                ext = os.path.splitext(file_name)[1] 
+                ext = os.path.splitext(file_name)[1]
                 new_filename = token_hex(16) + ext
                 photo.save('groovekitchen/static/products/' + new_filename)
                 image_list.append(new_filename)
-           
+
             images = '*'.join(image_list)
             product = Product(name=product_name, price=price, status='1', image=images, description=desc, customerid=cid)
             db.session.add(product)
@@ -176,7 +192,7 @@ def community_agent_profile_setting():
         specialities = request.form.get('specialities')
         working_days = request.form.get('working_days')
         photo_file = request.files['photo']
-        
+
         if firstname and lastname and state and city and email and phone and specialities and working_days:
             if photo_file:
                 file_name = photo_file.filename
@@ -197,12 +213,12 @@ def community_agent_profile_setting():
             customer.lastname = lastname
             customer.firstname = firstname
             customer.email = email
-            
+
             db.session.commit()
-            return jsonify({"page": "/chef-profile-setting/", "status": "success"})
+            return jsonify({"page": "/agent-profile-setting/", "status": "success"})
         else:
             return jsonify({"message":"Please complete all data fields!", "status": "error"})
-    
+
     return render_template('agents/profile_setting.html', title="Profile Setting", agent=agentid)
 
 
@@ -213,26 +229,6 @@ def community_agent_logout():
         session.pop('useronline')
         session.clear()
     return redirect(url_for('login'))
-
-
-
-@app.route('/community-agents/')
-def community_agents():
-    agents = CommunityAgent.query.filter_by(status='1').all()
-    if session.get('useronline'):
-        cid = session.get('useronline')
-        customer = Customer.query.get_or_404(cid)
-        cart_items = Cart.query.filter_by(customerid=customer.id).all()
-        wishlist_items = Wishlist.query.filter_by(customerid=customer.id).all()
-        number_of_cart_items = len(cart_items)
-        number_of_wishlist_item = len(wishlist_items)
-    else:
-        number_of_wishlist_item = 0
-        number_of_cart_items = 0
-        customer = None
-    return render_template('agents/community_agent.html', agents=agents, title='Community Agents', page='community_agent', number_of_wishlist_item=number_of_wishlist_item, number_of_cart_items=number_of_cart_items, customer=customer)
-
-
 
 @app.route('/community-agent-profile/')
 # @login_required
@@ -249,7 +245,7 @@ def community_agent_account_setting():
     vid = session.get('useronline')
     customer = Customer.query.get_or_404(vid)
     agentid = CommunityAgent.query.filter_by(customerid=vid).first()
-    
+
     if request.method == 'POST':
         password = request.form.get('password')
         confirm_password = request.form.get('confirm_password')
@@ -281,7 +277,7 @@ def categories(searchInput):
         number_of_cart_items = 0
         customer = None
         cart_items = None
-    
+
     return render_template('agents/categories.html', title="Search result", customer=customer, searchInput=searchInput, number_of_wishlist_item=number_of_wishlist_item, number_of_cart_items=number_of_cart_items)
 
 

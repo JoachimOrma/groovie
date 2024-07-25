@@ -66,7 +66,7 @@
 
         <!-- Content Start -->
         <div class="container">
-            <div class="row flex-row-reverse flex-lg-row g-0 gx-2 gx-lg-5 justify-content-between">
+            <div class="row g-0 gx-2 gx-lg-5 justify-content-between">
                 <div class="col-lg-6">
                     <div class="section-header text-start mb-lg-5 mb-2 wow fadeInUp" data-wow-delay="0.1s" style="max-width: 500px;">
                         <h3 class="display-6 mb-3">Top Trending Today</h3>
@@ -142,15 +142,15 @@
                 }
              });
         });
-        
-        
+
+
         $('#search-button').click(function(){
             const searchInput = $('#search-box').val();
             if(searchInput){
                 window.location.replace(`/category/${searchInput}/`);
             }
         })
-        
+
     </script>
 {% endblock customJS %}
 
