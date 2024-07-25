@@ -1,0 +1,54 @@
+
+{% extends 'utilities/layout.html' %}
+{% block search %}
+    <form action="{{url_for('search_result')}}" method="post">
+        <input type="hidden" name="csrf_token" value="{{csrf_token()}}" />
+        <div class="position-relative" style="max-width: 600px; margin: 0px auto">
+            <input class="form-control border-primary w-100 py-3 ps-4 pe-5" type="text" name="searchBox" id="searchBox" placeholder="What are you looking for..." required />
+            <button type="button" class="btn btn-primary py-2 position-absolute top-0 end-0 mt-2 me-2 search-btn">Search</button>
+        </div>
+    </form>
+    <h3 class="text-light mt-5">Community Agents Cooking</h3>
+{% endblock search %}
+{% block main %}
+<div class="container">
+    <div class="row g-0 gx-5 align-items-end">
+        {% if chefs %}
+        {% for chef in chefs %}
+        <div class="col-xl-3 col-lg-4 col-md-6 wow fadeInUp chef-col" data-wow-delay="0.1s">
+            <div class="card chef-card">
+                <input type="hidden" class="chef-input" name="chefId" value="{{chef.id}}" />
+                <img src="/static/photos/{{ chef.dp }}" alt="..." height="150" style="object-fit: cover;">
+                <div class="footer p-2 d-flex flex-column" style="font-size: small;">
+                    <span class="card-text text-center fs-5">{{ chef.firstname }} {{chef.lastname}}</span>
+                    <span class="card-text text-format"> {{ chef.specialities }}</span>
+                    <span class="text-muted ms-auto px-2" style="background: lavender; border-radius: 4px">{{chef.city}}, {{ chef.state }} State <i class="fas fa-location-dot text-warning"></i></span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="text-center fs-6"> No Match Found.</div>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock main %}
+{% block customJS %}
+<script>
+    $('.search-btn').click(function(){
+        const searchInput = $('#searchBox').val();
+        $.ajax({
+            url: `/search-result/`,
+            type: "POST",
+            data: {"csrf_token": "{{csrf_token()}}", "searchInput": searchInput},
+            success: function(response){
+                if (response.status == 'success'){}
+                    
+            }
+        });
+    });
+    
+</script>
+
+{% endblock customJS %}

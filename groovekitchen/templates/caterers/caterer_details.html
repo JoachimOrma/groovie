@@ -1,0 +1,213 @@
+{% extends "utilities/layout.html" %}
+{% block banner %}
+<div class="container-xxl py-3 bg-dark hero-header mb-3 d-none d-lg-block">
+    <div class="container text-center my-3 pt-3 pb-3">
+        <nav aria-label="breadcrumb">
+        </nav>
+    </div>
+</div>
+{% endblock banner %}
+
+{% block main %}
+   <div class="container">
+        <div class="row justify-content-center py-2 shadow">
+            <div class="col text-center">
+                <h2>Caterer Details</h2>
+            </div>
+        </div>
+        <div class="row justify-content-center py-4 shadow">
+            <div class="col-md-5 col-8 d-flex justify-content-center">
+                <div style="width: 300px">
+                    <img src="/static/photos/{{caterer.customer_deets.dp}}" alt="..." class="img-fluid mb-3"/>
+                </div>
+            </div>
+            <div class="col-lg-6 mt-3">
+                <h5 class="d-flex">
+                    Caterer, {{caterer.customer_deets.firstname}} {{caterer.customer_deets.lastname}}
+                    {% if caterer.verification == 'verified' %}
+                    <img src="/static/photos/verify.png" width="25" class="ms-2"/>
+                    {% endif %}
+                </h5>
+                <h6><i class="fa fa-location-dot"></i> {{caterer.city}}, {{caterer.state}}, Nigeria</h6>
+                <h6 class="text-primary mt-3"><i class="fa fa-circle-check"></i> Specialties</h6>
+                <p class="text-justified my-3"> {{caterer.specialities}} </p>
+                <div class="my-3 d-flex flex-column">
+                    <h6 class="text-primary"><i class="fa fa-clock"></i> Working Days</h6>
+                    <span>{{caterer.working_days}}</span>
+                </div>
+                <div class="d-flex mt-4 flex-column">
+                    <a href="" class="btn btn-dark col-5 mb-2" data-bs-target="#priceModal" data-bs-toggle="modal">Price Listing</a>
+                    <a href="" class="btn btn-blue col-5" data-bs-target="#bookingModal" data-bs-toggle="modal">Book Now</a>
+                    
+                     <!--Caterer Booking-->
+                     <div class="modal fade" id="bookingModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content rounded-0">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="bookingLabel">Booking Details</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <form action="{{url_for('caterer_details', cid=caterer.id)}}" method="post" id="bookingForm">
+                                        <input type="hidden" name="csrf_token" value="{{csrf_token()}}" />
+                                        <div class="row g-3">
+                                            <div class="col-md-6">
+                                                <div class="form-floating">
+                                                    <input type="text" name="fullname" class="form-control" id="name" placeholder="Your Fullname">
+                                                    <label for="name">Your Name</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-floating">
+                                                    <input type="email" name="email" class="form-control" id="email" placeholder="Your Email">
+                                                    <label for="email">Your Email</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-floating date" id="date3" data-target-input="nearest">
+                                                    <input type="datetime" name="datetime" class="form-control datetimepicker-input" id="datetime" placeholder="Date & Time" data-target="#date3" data-toggle="datetimepicker" />
+                                                    <label for="datetime">Date & Time</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-floating">
+                                                    <input type="text" name="address" class="form-control" id="address" placeholder="Your Home Address" />
+                                                    <label for="address">Your Address</label>
+                                                  </div>
+                                            </div>
+                                            <div class="col-12">
+                                                <div class="form-floating">
+                                                    <textarea class="form-control" placeholder="Service Description" name="message" id="message" style="height: 100px"></textarea>
+                                                    <label for="message">Service Description.</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-12">
+                                                <button class="btn btn-primary w-100 py-3" type="submit" id="book-button">Book Now</button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!--Price Listing-->
+                    <div class="modal fade" id="priceModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content rounded-0">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="priceLabel">Price Listing</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <p>Share with your friends.</p>
+                    <a href="#" class="share-it pe-3 py-2"> <i class="fab fa-facebook text-primary"></i> Share</a>
+                    <a href="#" class="share-it pe-3 py-2"> <i class="fab fa-twitter"></i> Share</a>
+                    <a href="#" class="pin-it py-2 pe-3"> <i class="fab fa-pinterest text-danger"></i> Pin it</a>
+                </div>
+                
+            </div>
+        </div>
+        <div class="row pt-5 pb-3">
+            <h2 class="text-center">Other Professional Caterers</h2>
+            <div class="tab-content mb-5">
+               <div class="tab-pane fade show p-0 active">
+                   <div class="row g-4">
+                       {% for baker in caterers %}
+                        {% if baker.id != caterer.id %}
+                        <div class="col-lg-3 col-md-6 col-11 wow fadeInUp card-col" data-wow-delay="0.1s">
+                        <div class="card caterer-card">
+                            <input type="hidden" name="catererId" class="caterer-input" value="{{caterer.id}}" />
+                            <img src="/static/photos/{{ baker.dp }}" alt="..." height="150" style="object-fit: cover;">
+                            <div class="footer p-2 d-flex flex-column text-center" style="font-size: small;">
+                                <span class="h6">{{ baker.firstname }} {{baker.lastname}}</span>
+                                <span class="card-text my-2" style="background: lavender; border-radius: 4px"> {{ baker.specialities }}</span>
+                                <span class="text-muted px-2" style="font-style: italic;"><i class="fas fa-location-dot text-warning"></i> {{baker.city}}, {{ baker.state }} State</span>
+                            </div>
+                        </div>
+                        </div>
+                        {% endif %}
+                       {% endfor %}
+                   </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock main %}
+
+{% block footer %}
+{% endblock footer %}
+{% block customJS %}
+<script>
+
+    const catererCards = document.querySelectorAll('.caterer-card');
+
+    catererCards.forEach(card => {
+        card.addEventListener('click', () => {
+            const input = card.querySelector('.caterer-input');
+            
+            if (input) {
+                const catererId = input.value;
+                window.location.replace(`/caterer-details/${catererId}/`);
+            }
+        });   
+    });
+
+    $('#book-button').click(function(e){
+        e.preventDefault();
+        const catererid = "{{caterer.id}}";
+        const myForm = document.querySelector('#bookingForm');
+        const formData = new FormData(myForm);
+        
+        $.ajax({
+            url: `/caterer-details/${catererid}/`,
+            type: "POST",
+            cache: false,
+            processData: false,
+            contentType: false,
+            data: formData,
+            success: function(response){
+                if (response.status == 'success'){
+                    swal({
+                        title: "Sent!",
+                        text: "Your booking has been sent successfully.",
+                        icon: "success",
+                        timer: 3000,
+                        buttons: {
+                            confirm: {
+                                text: "OK",
+                                value: true,
+                                visible: true,
+                                className: "btn btn-success btn-sm",
+                                closeModal: true,
+                            },
+                        },
+                    });
+                } else {
+                    swal({
+                        text: "Please complete all data fields.",
+                        icon: "error",
+                        buttons: {
+                            confirm: {
+                                text: "OK",
+                                value: true,
+                                visible: true,
+                                className: "btn btn-danger btn-sm",
+                                closeModal: true,
+                            },
+                        },
+                    });
+                }
+            },
+        })
+    })
+
+</script>
+{% endblock customJS %}

@@ -1,0 +1,214 @@
+{% extends "utilities/layout.html" %}
+{% block banner %}
+<div class="container-xxl py-3 bg-dark hero-header mb-3 d-none d-lg-block">
+    <div class="container text-center my-3 pt-3 pb-3">
+        <nav aria-label="breadcrumb">
+
+        </nav>
+    </div>
+</div>
+{% endblock banner %}
+
+{% block main %}
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col text-center py-2 shadow">
+                <h3>Chef Details</h3>
+            </div>
+        </div>
+        <div class="row justify-content-center py-4 shadow">
+            <div class="col-md-5 col-8 d-flex justify-content-center">
+                <div style="width: 300px">
+                    <img src="/static/photos/{{chef.customer_deets.dp}}" alt="..." class="img-fluid mb-3"/>
+                </div>
+            </div>
+            <div class="col-lg-6 mt-3">
+                <h5 class="d-flex">
+                 Chef, {{chef.customer_deets.firstname}} {{chef.customer_deets.lastname}}
+                {% if chef.verification == 'verified' %}
+                    <img src="/static/photos/verify.png" width="25" class="ms-2"/>
+                {% endif %}
+                </h5>
+                <h6><i class="fa fa-location-dot"></i> {{chef.city}}, {{chef.state}}, Nigeria</h6>
+                <h6 class="text-primary mt-3"><i class="fa fa-circle-check"></i> Bio & Specialties</h6>
+                <p class="text-justified my-3"> {{chef.specialities}} </p>
+                <div class="my-3 d-flex flex-column">
+                    <h6 class="text-primary"><i class="fa fa-clock"></i> Working Days</h6>
+                    <span>{{chef.working_days}}</span>
+                </div>
+                <div class="d-flex mt-4 flex-column">
+                    <a href="" class="btn btn-dark col-5 mb-2" data-bs-target="#priceModal" data-bs-toggle="modal">Price Listing</a>
+                    <a href="" class="btn btn-blue col-5" data-bs-target="#bookingModal" data-bs-toggle="modal">Book Now</a>
+                    
+                     <!--Chef Booking-->
+                     <div class="modal fade" id="bookingModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content rounded-0">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="bookingLabel">Booking Details</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <form action="{{url_for('chef_details', cid=chef.id)}}" method="post" id="bookingForm">
+                                        <input type="hidden" name="csrf_token" value="{{csrf_token()}}" />
+                                        <div class="row g-3">
+                                            <div class="col-md-6">
+                                                <div class="form-floating">
+                                                    <input type="text" name="fullname" class="form-control" id="name" placeholder="Your Fullname">
+                                                    <label for="name">Your Name</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-floating">
+                                                    <input type="email" name="email" class="form-control" id="email" placeholder="Your Email">
+                                                    <label for="email">Your Email</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-floating date" id="date3" data-target-input="nearest">
+                                                    <input type="datetime" name="datetime" class="form-control datetimepicker-input" id="datetime" placeholder="Date & Time" data-target="#date3" data-toggle="datetimepicker" />
+                                                    <label for="datetime">Date & Time</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-floating">
+                                                    <input type="text" name="address" class="form-control" id="address" placeholder="Your Home Address" />
+                                                    <label for="address">Your Address</label>
+                                                  </div>
+                                            </div>
+                                            <div class="col-12">
+                                                <div class="form-floating">
+                                                    <textarea class="form-control" placeholder="Service Description" name="message" id="message" style="height: 100px"></textarea>
+                                                    <label for="message">Service Description.</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-12">
+                                                <button class="btn btn-primary w-100 py-3" type="submit" id="book-button">Book Now</button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!--Price Listing-->
+                    <div class="modal fade" id="priceModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content rounded-0">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="priceLabel">Price Listing</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <p>Share with your friends.</p>
+                    <a href="#" class="share-it pe-3 py-2"> <i class="fab fa-facebook text-primary"></i> Share</a>
+                    <a href="#" class="share-it pe-3 py-2"> <i class="fab fa-twitter"></i> Share</a>
+                    <a href="#" class="pin-it py-2 pe-3"> <i class="fab fa-pinterest text-danger"></i> Pin it</a>
+                </div>
+                
+            </div>
+        </div>
+        <div class="row pt-5 pb-3">
+            <h2 class="text-center py-3 mb-5">Other Popular Chefs</h2>
+            <div class="tab-content">
+                <div id="tab-1" class="tab-pane fade show p-0 active">
+                    <div class="row g-4 justify-content-center justify-content-md-start">
+                      {% for person in chefs %}
+                        {% if person.id != chef.id %}
+                          <div class="col-lg-3 col-md-6 col-11 wow fadeInUp" data-wow-delay="0.1s">
+                            <div class="card chef-card">
+                                <input type="hidden" class="chef-input" name="chefId" value="{{person.id}}" />
+                                <img src="/static/photos/{{ person.customer_deets.dp }}" alt="..." height="200" style="object-fit: cover;">
+                                <div class="footer p-2 d-flex flex-column text-center" style="font-size: small;">
+                                    <span class="h6">{{ person.customer_deets.firstname }} {{person.customer_deets.lastname}}</span>
+                                    <span class="card-text text-format" style="background: lavender; border-radius: 4px"> {{ person.specialities }}</span>
+                                    <span class="text-muted px-2" style="font-style: italic;"><i class="fas fa-location-dot text-warning"></i> {{person.city}}, {{person.state }} State</span>
+                                </div>
+                            </div>
+                          </div>
+                        {% endif %}
+                      {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock main %}
+
+{% block footer %}
+{% endblock footer %}
+
+{% block customJS %}
+<script>
+    const chefCards = document.querySelectorAll('.chef-card');
+
+    chefCards.forEach(card => {
+        card.addEventListener('click', () => {
+            const input = card.querySelector('.chef-input');
+            if (input) {
+            const chefId = input.value;
+            window.location.replace(`/chef-details/${chefId}/`);
+            }
+
+        });
+    
+    });
+
+    $('#book-button').click(function(e){
+        e.preventDefault();
+        const chefid = "{{chef.id}}";
+        const myForm = document.querySelector('#bookingForm');
+        const formData = new FormData(myForm);
+        
+        $.ajax({
+            url: `/chef-details/${chefid}/`,
+            type: "POST",
+            cache: false,
+            processData: false,
+            contentType: false,
+            data: formData,
+            success: function(response){
+                if (response.status == 'success'){
+                    swal({
+                        title: "Sent!",
+                        text: "Your booking has been sent successfully.",
+                        icon: "success",
+                        timer: 3000,
+                        buttons: {
+                            confirm: {
+                                text: "OK",
+                                value: true,
+                                visible: true,
+                                className: "btn btn-success btn-sm",
+                                closeModal: true,
+                            },
+                        },
+                    });
+                } else {
+                    swal({
+                        text: "Please complete all data fields.",
+                        icon: "error",
+                        buttons: {
+                            confirm: {
+                                text: "OK",
+                                value: true,
+                                visible: true,
+                                className: "btn btn-danger btn-sm",
+                                closeModal: true,
+                            },
+                        },
+                    });
+                }
+            },
+        })
+    })
+</script>
+{% endblock customJS %}

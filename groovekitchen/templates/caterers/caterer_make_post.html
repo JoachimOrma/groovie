@@ -1,0 +1,171 @@
+{% extends "carters/dashboard_layout.html" %}
+{% block title %}
+    <h2>Make a post</h2>
+{% endblock title %}
+{% block main %}
+    <div class="row mb-4">
+        <div class="col">
+            <h2 class="mb-3 py-2">CREATE SOCIAL FIELDS POSTS</h2>
+            <form action="{{url_for('carter_make_post')}}" method="post" enctype="multipart/form-data" id="forms" class="shadow py-4">
+                <input type="hidden" name="csrf_token" value="{{csrf_token()}}" />
+                <div class="row justify-content-around">
+                    <div class="col-md-10 col-12">
+                        <div class="d-flex">
+                            <div class="mb-3">
+                                <input type="file" name="mediaFile" id="media-file" style="display:none">
+                                <label for="media-file" class="row" title="Select a picture or a 30 seconds video.">
+                                    <i class="fas fa-photo-film" style="font-size: 3rem"></i> 
+                                    <span style="font-style: italic;">Select a picture or a 30 seconds video.</span>
+                                </label>
+                            </div>
+                            <div class="hidden photo-preview">
+                                <img src="" alt="..." height="120" class="photo">
+                            </div>
+                            <div class="hidden video-preview">
+                                <video controls width="230" height="100" class="video" autoplay muted></video>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="fs-5 d-block" for="title">Title</label>
+                            <input type="text" name="title" id="title" class="form-control noround"/>
+                        </div>
+                        <div class="mb-3">
+                            <label class="fs-5 d-block" for="content">Content</label>
+                            <textarea name="content" id="content" rows="5" class="form-control noround"></textarea>
+                        </div>
+                        <div class="mt-2">
+                            <button type="button" class="btn btn-primary col-md-4 col-12 bnt-lg post-btn noround">POST</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock main %}
+
+{% block customJS %}
+<script>
+    function checkFileType(file) {
+        const imageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/jpg', 'image/jfif'];
+        const videoTypes = ['video/mp4', 'video/mkv', 'video/mov', 'video/avi'];
+        
+        if (imageTypes.includes(file.type)) {
+            return 'image';
+        } else if (videoTypes.includes(file.type)) {
+            return 'video';
+        }
+    }
+    
+    function readURL(input) {
+        if (input.files) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                $('.photo').attr('src', e.target.result);
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+   
+    function readVideoURL(input) {
+        if (input.files) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                $('.video').attr('src', e.target.result);
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+    
+    const fileInput = document.getElementById('media-file');
+    fileInput.addEventListener('change', function() {
+        const file = fileInput.files[0];
+        const fileType = checkFileType(file);
+        
+        if (fileType === 'image') {          
+            readURL(this);
+            $('.photo-preview').removeClass('hidden');
+            $('.video-preview').addClass('hidden');
+          
+        } else if (fileType === 'video') {
+            readVideoURL(this);
+            $('.video-preview').removeClass('hidden');
+            $('.photo-preview').addClass('hidden');
+        }
+    });
+
+    $('.post-btn').click(function(){
+        const myForm = document.querySelector('#forms');
+        const formData = new FormData(myForm);
+        formData.append("csrf_token", "{{csrf_token()}}");
+
+        $.ajax({
+            url: "/carter-make-post/",
+            type: "POST",
+            processData: false,
+            contentType: false,
+            data: formData,
+            success: function(response){
+                if (response.status == 'success'){
+                    swal({
+                        title: "Success!",
+                        text: "Your post has been uploaded.",
+                        icon: "success",
+                        buttons: {
+                            confirm: {
+                                text: "OK",
+                                value: true,
+                                visible: true,
+                                className: "btn btn-sm btn-success",
+                                closeModal: true,
+                            },
+                        },
+                    });
+                    window.location.replace('/carter-timeline/');
+                } else if (response.status == 'large_file'){
+                    swal({
+                        text: "Video duration is too large.",
+                        icon: "error",
+                        buttons: {
+                            confirm: {
+                                text: "OK",
+                                value: true,
+                                visible: true,
+                                className: "btn btn-sm btn-danger",
+                                closeModal: true,
+                            },
+                        },
+                    });
+                } else if (response.status == 'not-allowed'){
+                    swal({
+                        text: response.message,
+                        icon: "error",
+                        buttons: {
+                            confirm: {
+                                text: "OK",
+                                value: true,
+                                visible: true,
+                                className: "btn btn-sm btn-danger",
+                                closeModal: true,
+                            }
+                        },
+                    });
+                } else {
+                    swal({
+                        text: "Please complete all data fields!",
+                        icon: "error",
+                        buttons: {
+                            confirm: {
+                                text: "OK",
+                                value: true,
+                                visible: true,
+                                className: "btn btn-sm btn-danger",
+                                closeModal: true,
+                            }
+                        },
+                    });
+                }
+            }
+        })
+    });
+</script>
+{% endblock customJS %}

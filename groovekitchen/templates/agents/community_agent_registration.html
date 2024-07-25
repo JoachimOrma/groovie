@@ -1,0 +1,138 @@
+{% extends 'utilities/layout.html' %}
+{% block hero %}{% endblock hero %}
+
+{% block main %}
+    <div class="container-xxl pb-5">
+        <div class="container">
+            <form action="{{url_for('community_agent_registration')}}" method="post" enctype="multipart/form-data" id="form">
+                <input type="hidden" name="csrf_token" value="{{csrf_token()}}" />
+                <div class="row justify-content-around">
+                    <div class="col-lg-10">
+                        <div class="picture_wrapper">
+                            <input type="file" name="photo" id="picture" class="picture" />
+                            <img src="/static/photos/avatar.png" alt="..." class="w-100 photo" height="150"/>
+                        </div>
+                        <fieldset>
+                            <legend>Personal Information</legend>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-floating mb-3">
+                                        <input type="text" name="phone" id="phone" class="form-control noround" placeholder="Phone" value="{{customer.phone}}" minlength="11" maxlength="11" required/>
+                                        <label for="phone">Phone</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-floating mb-3">
+                                        <input name="address" id="address" class="form-control noround" placeholder="Your home address" value="{{customer.address}}"/>  
+                                        <label for="address">Address</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-floating mb-3">
+                                        <input type="text" name="city" id="city" class="form-control noround" placeholder="City" value="{{customer.city}}"/>
+                                        <label for="city">City</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-floating mb-3">
+                                        <input type="text" name="state" id="state" class="form-control noround" placeholder="State" value="{{customer.state}}" />
+                                        <label for="state">State</label>
+                                    </div>
+                                </div>        
+                                <div class="col-md-12">
+                                    <div class="form-floating mb-3">
+                                        <input name="specialities" id="specialities" class="form-control noround" placeholder="Specialities" value="{{customer.specialities}}" />  
+                                        <label for="specialities">Specialities</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </fieldset>
+                        <div class="mt-4">
+                        <button type="button" class="btn btn-primary col-12 col-lg-4 btn-lg register-btn noround">Upgrade Account</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock main %}
+{% block customJS %}
+<script>
+    function readURL(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                $('.photo').attr('src', e.target.result);
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    $('.picture').change(function(){
+        readURL(this);
+    });
+    
+    $('.register-btn').click(function(){       
+        const myForm = document.querySelector('#form');
+        const formData = new FormData(myForm);
+        const customer_type = "{{customer.customer_type}}";
+        const customer_name = "{{customer.firstname}}";
+        let comment = '';
+
+        if (customer_type == 'customer'){
+            $.ajax({
+                url: "/register-as-a-community-agent/",
+                type: "POST",
+                cache: false,
+                processData: false,
+                contentType: false,
+                data: formData,
+                success: function(response){
+                    if (response.status == 'error'){
+                        swal({
+                            text: "Please complete all fields!",
+                            icon: "error",
+                            buttons: {
+                                confirm: {
+                                    text: "OK",
+                                    value: true,
+                                    visible: true,
+                                    className: "btn btn-danger",
+                                    closeModal: true,
+                                },
+                            },
+                        }); 
+                    } else {
+                        swal({
+                            title: "Success!",
+                            text: "Your account has been upgraded.",
+                            icon: "success",
+                            timer: 3000,
+                            buttons: {
+                                confirm: {
+                                    text: "OK",
+                                    value: true,
+                                    visible: true,
+                                    className: "btn btn-success",
+                                    closeModal: true,
+                                },
+                            },
+                        });
+                        
+                        function redirectToLogin() {
+                            window.location.replace('/community-agent-dashboard/');
+                        };
+                        const timer = setTimeout(redirectToLogin, 3000);
+                    } 
+                },       
+            });  
+        } else {
+            if (customer_type == 'chef'){ comment = "You are already registered as a profession chef."; }
+            else if (customer_type == 'caterer'){ comment = "You are already registered as a profession caterer.";}
+            else { comment = "You are already registered as a community agent.";}
+            lunchComment(comment, customer_name);
+        }
+
+    });
+</script>
+{% endblock customJS %}

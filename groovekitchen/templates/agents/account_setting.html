@@ -1,0 +1,219 @@
+{% extends "agents/dashboard_layout.html" %}
+
+{% block main %}
+
+<div class="mb-3">
+    <h4><i class="fa fa-gear"></i> Account Setting</h4>
+</div>
+
+<form action="{{url_for('community_agent_account_setting')}}" method="post">
+     <input type="hidden" name="csrf_token" value="{{csrf_token()}}" />
+     <div class="row justify-content-around">
+         <div class="col-lg-10">
+            <fieldset class="mt-3">
+                <legend>Update Your Password</legend>
+
+                 <div class="row">
+                    <div class="col-12">
+                        <div class="form-floating mb-3">
+                            <input type="password" name="password" id="password" class="form-control noround" placeholder="New Password"/>
+                            <label for="password">New Password</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <input type="password" name="confirm_password" id="confirm_password" class="form-control noround" placeholder="Confirm Password"/>
+                            <label for="confirm_password">Confirm Password</label>
+                        </div>
+                    </div>
+                     <div class="mb-5">
+                        <button type="button" class="btn btn-primary col-lg-4 col-12 bnt-lg update-password-btn noround">Save Changes</button>
+                     </div>
+                 </div>
+
+            </fieldset>
+            <fieldset class="mt-3">
+                <legend>Delete Account / Deactivate Account</legend>
+
+                 <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <p>
+                            By clicking on the delete button, your account will "deleted". Still want to continue?
+                            <a type="button" class="text-danger delete-account-btn">Delete Account</a>
+                        </p>
+                        <p>
+                            Do you want to take a break instead?
+                            <a type="button" class="text-warning deactivate-account-btn">Deactivate Account</a>
+                        </p>
+                    </div>
+                 </div>
+            </fieldset>
+         </div>
+     </div>
+</form>
+
+{% endblock main %}
+{% block customJS %}
+<script>
+    $('.update-password-btn').click(function(){
+        const password = $('#password').val();
+        const confirm_password = $('#confirm_password').val();
+
+        $.ajax({
+            url: "/community-agent-account-setting/",
+            type: "POST",
+            data: {
+                "password": password,
+                "confirm_password": confirm_password,
+                "csrf_token": "{{csrf_token()}}",
+            },
+            success: function(response) {
+                if (response.status == 'success'){
+                    swal({
+                        title: "Success!",
+                        text: "Your password has been updated!",
+                        icon: "success",
+                        buttons: {
+                            confirm: {
+                                text: "OK",
+                                value: true,
+                                visible: true,
+                                className: "btn btn-success",
+                                closeModal: true,
+                            },
+                        },
+                    });
+                } else if (response.status == 'unmatch_password') {
+                    swal({
+                        text: "Passwords do not match!",
+                        icon: "error",
+                        buttons: {
+                            confirm: {
+                                text: "OK",
+                                value: true,
+                                visible: true,
+                                className: "btn btn-danger",
+                                closeModal: true,
+                            },
+                        },
+                    });
+                } else {
+                    swal({
+                        text: "Password fields cannot be empty.",
+                        icon: "error",
+                        buttons: {
+                            confirm: {
+                                text: "OK",
+                                value: true,
+                                visible: true,
+                                className: "btn btn-danger",
+                                closeModal: true,
+                            },
+                        },
+                    });
+                }
+            },
+               
+        });
+        $('#password').val('');
+        $('#confirm_password').val('');
+    });
+
+    $('.delete-account-btn').click(function(){
+        const agentid = "{{agent.id}}";
+        swal({
+            title: "Are you sure you want to delete your account?",
+            text: "You won't be able to revert this!",
+            icon: "warning",
+            buttons: {
+            confirm: {
+                text: "Yes, delete it!",
+                className: "btn btn-success",
+            },
+            cancel: {
+                visible: true,
+                className: "btn btn-danger",
+            },
+            },
+        }).then((Delete) => {
+            if (Delete) {
+                $.ajax({
+                    url: `/agent-delete-account/${agentid}/`,
+                    success: function(response){
+                        if (response.status == 'delete'){
+                            swal({
+                                title: "Deleted!",
+                                text: "Your account has been deleted.",
+                                icon: "success",
+                                buttons: {
+                                    confirm: {
+                                        text: "OK",
+                                        value: true,
+                                        visible: true,
+                                        className: "btn btn-success",
+                                        closeModal: true,
+                                    },
+                                },
+                            });
+                            function redirectToLogin() {
+                                window.location.replace('/login/');
+                            };
+                            const timer = setTimeout(redirectToLogin, 3000);
+                        }
+                    }
+                });
+            } else {
+                swal.close();
+            }
+        });
+    });
+
+    $('.deactivate-account-btn').click(function(){
+        const agentid = "{{agent.id}}";
+        swal({
+            title: "Do you really want to deactivate your account?",
+            text: "You can reactivate later!",
+            icon: "warning",
+            buttons: {
+            confirm: {
+                text: "Yes, deactivate it!",
+                className: "btn btn-success",
+            },
+            cancel: {
+                visible: true,
+                className: "btn btn-danger",
+            },
+            },
+        }).then((Deactivate) => {
+            if (Deactivate) {
+                $.ajax({
+                    url: `/commuity-agent-deactivate-account/${agentid}/`,
+                    success: function(response){
+                        if (response.status == 'deactivate'){
+                            swal({
+                                title: "Deactivated!",
+                                text: "Your account has been deactivated.",
+                                icon: "success",
+                                buttons: {
+                                    confirm: {
+                                        text: "OK",
+                                        value: true,
+                                        visible: true,
+                                        className: "btn btn-success",
+                                        closeModal: true,
+                                    },
+                                },
+                            });
+                            function redirectToLogin() {
+                                window.location.replace('/login/');
+                            };
+                            const timer = setTimeout(redirectToLogin, 3000);
+                        }
+                    }
+                });
+            } else {
+                swal.close();
+            }
+        });
+    });
+
+</script>
+{% endblock customJS %}

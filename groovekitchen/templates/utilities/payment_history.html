@@ -1,0 +1,76 @@
+{% extends "utilities/layout.html" %}
+{% block banner %}
+<div class="container-xxl py-3 bg-dark hero-header mb-3 d-none d-lg-block">
+    <div class="container text-center my-3 pt-3 pb-3">
+        <nav aria-label="breadcrumb">
+
+        </nav>
+    </div>
+</div>
+{% endblock banner %}
+
+{% block main %}
+    <div class="container">
+        {% if payment_lists %}
+        <div class="row">
+            <div class="col-md-12">
+              <div class="card card-round">
+                <div class="card-header">
+                  <div class="card-head-row card-tools-still-right">
+                    <div class="h3 text-center">My Payment History</div>
+                  </div>
+                </div>
+                <div class="card-body p-0">
+                  <div class="table-responsive">
+                    <table class="table align-items-center mb-0">
+                      <thead class="thead-light">
+                        <tr>
+                          <th scope="col">#</th>
+                          <th scope="col">Payment Reference Number</th>
+                          <th scope="col">Amount Paid (NGN)</th>
+                          <th scope="col">Date Paid</th>
+                          <th scope="col">Payment Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for payment in payment_lists %}
+                        {% if payment.status == 'paid' or payment.status == 'failed' %}
+                        <tr>
+                          {% if payment.status == 'paid' %}
+                          <th scope="row"><button class="btn btn-success btn-sm">
+                            <i class="fa fa-check"></i></button>
+                          </th>
+                          {% elif payment.status == 'failed' %}
+                          <th scope="row"><button class="btn btn-danger btn-sm">
+                            <i class="fa fa-xmark"></i></button>
+                          </th>
+                          {% endif %}
+                          <td>{{payment.ref}}</td>
+                          <td>{{payment.amount}}</td>
+                          <td>{{payment.date_paid.strftime("%A, %B %d, %Y %I:%M %p")}}</td>
+                          {% if payment.status == 'paid' %}
+                          <td><span class="badge bg-success fs-6">Successful</span></td>
+                          {% elif payment.status == 'failed' %}
+                          <td><span class="badge bg-danger fs-6">Failed</span></td>
+                          {% endif %}
+                        </tr>
+                        {% endif %}
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        {% else %}
+        <div class="d-flex justify-content-center fs-5">
+            <p>Your payment history is empty.</p>
+        </div>
+        {% endif %}
+    </div>
+{% endblock main %}
+
+{% block footer %}
+{% endblock footer %}
+

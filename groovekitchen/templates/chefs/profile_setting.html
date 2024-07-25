@@ -1,0 +1,179 @@
+{% extends "chefs/dashboard_layout.html" %}
+{% block main %}
+<h4><i class="fa fa-gear"></i> Update Your Profile</h4>
+<form action="{{url_for('chef_profile_setting')}}" method="post" enctype="multipart/form-data" id="form">
+     <input type="hidden" name="csrf_token" value="{{csrf_token()}}" />
+        <div class="row justify-content-around shadow pb-4">
+         <div class="col-lg-10">
+             <div class="picture_wrapper">
+                 <input type="file" name="photo" id="picture" class="picture" />
+                 <img src="/static/photos/{% if chef.customer_deets.dp %}{{chef.customer_deets.dp}}{% else %}avatar.png{% endif %}" alt="..." class="w-100 photo" height="150"/>
+             </div>
+            <fieldset>
+                <legend>Personal Information</legend>
+
+                 <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-floating mb-3">
+                            <input type="text" name="firstname" id="firstname" class="form-control noround" value="{{chef.customer_deets.firstname}}" />
+                            <label for="firstname">Firstname</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating mb-3">
+                            <input type="text" name="lastname" id="lastname" class="form-control noround" value="{{chef.customer_deets.lastname}}" />
+                            <label for="lastname">Lastname</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-floating mb-3">
+                           <input type="email" name="email" id="email" class="form-control noround" value="{{chef.customer_deets.email}}" />
+                           <label for="email">Email</label>
+                       </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating mb-3">
+                           <input type="text" name="phone" id="phone" class="form-control noround" value="{% if chef.phone %}{{chef.phone}}{% endif %}" minlength="11" maxlength="11" required/>
+                           <label for="phone">Phone</label>
+                       </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="form-floating mb-3">
+                            <input type="text" name="city" id="city" class="form-control noround" value="{% if chef.city %}{{chef.city}}{% endif %}" />
+                            <label for="city">City</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                    <div class="form-floating mb-3">
+                        <input type="text" name="state" id="state" class="form-control noround" value="{% if chef.state %}{{chef.state}}{% endif %}" />
+                        <label for="state">State</label>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="form-floating mb-3">
+                        <input type="text" name="specialities" id="specialities" class="form-control noround" value="{% if chef.specialities %}{{chef.specialities}}{% endif %}"/>
+                        <label for="specialities">Bio & Specialities</label>
+                    </div>
+                    <div class="form-floating mb-3">
+                        <input type="text" name="working_days" id="working_days" class="form-control noround" value="{% if chef.working_days %}{{chef.working_days}}{% endif %}" />
+                        <label for="working_days">Working Days</label>
+                    </div>
+                </div>
+            </div>
+            </fieldset>
+            <div class="mt-4">
+              <button type="button" class="btn btn-primary col-12 col-lg-4 bnt-lg profile-update-btn noround">Save Changes</button>
+            </div>
+         </div>
+     </div>
+</form>
+
+{% endblock main %}
+{% block customJS %}
+<script>
+    function readURL(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                $('.photo').attr('src', e.target.result);
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    $('.picture').change(function(){
+        readURL(this);
+    });
+    
+    function readVideoURL(input) {
+        if (input.files) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                $('.video-preview').attr('src', e.target.result);
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    $('#video').change(function(){
+        readVideoURL(this);
+        $('#video-placeholder').addClass('hidden');
+        $('.video-preview').removeClass('hidden');
+    });
+
+    $('.profile-update-btn').click(function(){
+        
+        const myForm = document.querySelector('#form');
+        const formData = new FormData(myForm);
+        formData.append("csrf_token", "{{csrf_token()}}");
+        
+        $.ajax({
+            url: "/chef-profile-setting/",
+            type: "POST",
+            cache: false,
+            processData: false,
+            contentType: false,
+            data: formData,
+            success: function(response){
+                if (response.status == 'success'){
+                    swal({
+                        title: "Success!",
+                        text: "Your profile has been updated.",
+                        icon: "success",
+                        timer: 3000,
+                        buttons: {
+                            confirm: {
+                                text: "OK",
+                                value: true,
+                                visible: true,
+                                className: "btn btn-success",
+                                closeModal: true,
+                            },
+                        },
+                    });
+                } else if (response.status == 'error'){
+                    swal({
+                        text: response.message,
+                        icon: "error",
+                        buttons: {
+                            confirm: {
+                                text: "OK",
+                                value: true,
+                                visible: true,
+                                className: "btn btn-danger",
+                                closeModal: true,
+                            },
+                        },
+                    });  
+                } else {
+                    swal({
+                        text: response.message,
+                        icon: "error",
+                        buttons: {
+                            confirm: {
+                                text: "OK",
+                                value: true,
+                                visible: true,
+                                className: "btn btn-danger",
+                                closeModal: true,
+                            },
+                        },
+                    });
+                }
+                function redirectToLogin() {
+                    window.location.replace('/chef-profile-setting/');
+                };
+                const timer = setTimeout(redirectToLogin, 3000);
+            },
+        });
+      
+    });
+
+
+</script>
+{% endblock customJS %}

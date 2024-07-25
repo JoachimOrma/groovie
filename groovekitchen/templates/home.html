@@ -1,0 +1,94 @@
+{% extends 'utilities/layout.html' %}
+{% block search %}
+    <form action="" method="post">
+        <input type="hidden" name="csrf_token" value="{{csrf_token()}}" />
+        <div class="position-relative" style="max-width: 600px; margin: 0px auto">
+            <input class="form-control border-primary w-100 py-3 ps-4 pe-5" type="text" name="searchBox" id="searchBox" placeholder="What are you looking for...">
+            <button type="button" class="btn btn-primary py-2 position-absolute top-0 end-0 mt-2 me-2">Search</button>
+        </div>
+    </form>
+{% endblock search %}
+{% block main %}
+<div class="container">
+    <div class="row g-0 gx-5 align-items-end">
+        <div class="col-lg-6">
+            <div class="section-header text-start mb-5 wow fadeInUp" data-wow-delay="0.1s" style="max-width: 500px;">
+                <h6 class="display-6 mb-3">Search Result</h6>
+            </div>
+            <!-- <iframe src="https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d27412.861617038867!2d3.3407038269176215!3d6.6089354769565105!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e1!3m2!1sen!2sng!4v1719788059639!5m2!1sen!2sng" width="800" height="600" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe> -->
+            <div id="map" style="height: 100%; width: 100%">
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock main %}
+{% block customJS %}
+<script>
+
+    function initAutocomplete() {
+        var input = document.getElementById('searchBox');
+        var autocomplete = new google.maps.places.Autocomplete(input);
+    }
+
+
+    let map;
+
+    function initMap() {
+        map = new google.maps.Map(document.getElementById('map'), {
+            center: {lat: 0, lng: 0},
+            zoom: 10
+        });
+
+        // Function to add a marker to the map
+        function addMarker(location) {
+            new google.maps.Marker({
+                position: location,
+                map: map
+            });
+        }
+        let chefs = [
+            {name: 'Chef 1', location: {lat: 40.712776, lng: -74.005974}},
+            {name: 'Chef 2', location: {lat: 34.052235, lng: -118.243683}},
+            
+        ];
+
+        chefs.forEach(chef => {
+            addMarker(chef.location);
+        });
+
+        // Function to update markers on the map
+        function updateMarkers(newData) {
+            // Remove existing markers
+            chefs.forEach(marker => {
+                marker.setMap(null);
+            });
+
+            // Update chefs with new data
+            chefs = newData;
+
+            // Add updated markers
+            chefs.forEach(chef => {
+                addMarker(chef.location);
+            });
+        }
+
+        // Simulated real-time updates (replace with actual data fetching)
+        setInterval(() => {
+            // Example: Fetch updated data from your backend (Flask API endpoint)
+            fetch('/get-chefs/')
+                .then(response => response.json())
+                .then(data => {
+                    updateMarkers(data.chefs);
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                });
+        }, 5000); 
+    }
+</script>
+
+<!-- Load Google Maps JavaScript API with your API key -->
+<script src="https://maps.googleapis.com/maps/api/js?sensor=fals&callback=initMap" async defer></script>
+
+{% endblock customJS %}

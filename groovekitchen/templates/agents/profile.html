@@ -1,0 +1,178 @@
+{% extends "agents/dashboard_layout.html" %}
+
+{% block main %}
+
+<div class="card col-lg-10 mx-auto">
+    <div class="card-body">
+        <div class="mb-4 picture_wrapper border-0 bg-danger">
+            <img src="/static/photos/{% if agent.customer_deets.dp %}{{agent.customer_deets.dp}}{% else %}avatar.png{% endif %}" alt="..." class="img-fluid"/>
+        </div>
+        <div class="d-flex align-items-center">
+            <h2>{{agent.customer_deets.firstname}}, {{agent.customer_deets.lastname}}</h2>
+            {% if agent.verification == 'verified' %}
+            <h6 class="ms-3"><img src="/static/photos/verify.png" width="30"/></h6>
+            {% else %}
+            <h6 class="ms-3"><a href="" class="p-2 px-3" style="border-radius: 15px; background-color: lightblue;"><i class="fas fa-shield"></i> Verify Now</a></h6>
+            {% endif %}
+        </div>
+        <span class="fs-5">{{agent.specialities}}</span> <br />
+        <span>{{agent.address}}, {{agent.city}}</span> <br />
+        {{agent.state}}, Nigeria <i class="fs-3">.</i>
+        <a class="ms-1" type="button" onclick="showContact()">Contact Info</a> <br />
+        <span class="contact hidden">
+            <span>{{agent.customer_deets.email}}</span> <span class="fs-3">.</span>
+            <span>{{agent.phone}}</span>
+        </span>
+    </div>
+</div>
+
+<div class="card col-lg-10 mx-auto">
+    <div class="card-body">
+        <div class="d-flex align-items-center">
+            <h5 class="card-title">Create Products</h5>
+            <h6 class="ms-auto">
+                <a  type="button" data-bs-toggle="modal" data-bs-target="#createProductModal" class="p-2 px-3" style="border-radius: 15px; background-color: lightblue;">Create Product</a>
+            </h6>
+        </div>
+        {% if products %}
+        <p class="card-text">You have {{number_of_products}} {% if number_of_products > 1 %}products {% else %} product {% endif %} available.</p>
+        <a href="{{url_for('community_agent_product')}}" class="btn btn-primary">My Products</a>
+        {% else %}
+        <span class="card-text">You haven't created any products yet.</span><br />
+        <span class="card-text">Your products will be displayed here.</span>
+        {% endif %}
+    </div>
+</div>
+<div class="modal fade" id="createProductModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h6 class="modal-title" id="exampleModalLabel">
+            <div class="d-flex align-items-center pt-2">
+                <img 
+                    src="/static/photos/{{agent.customer_deets.dp}}" 
+                    class="img-source" 
+                    alt="Profile Image" 
+                    width="50" height="50" style="border-radius: 50%"
+                />
+                <span class="ms-2 fs-5">{{ agent.customer_deets.firstname }} {{ agent.customer_deets.lastname }}</span>
+            </div>
+          </h6>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            <form action="{{url_for('community_agent_create_product')}}" method="post" enctype="multipart/form-data" id="forms" class="shadow py-4">
+                <input type="hidden" name="csrf_token" value="{{csrf_token()}}" />
+                <div class="row justify-content-around">
+                       <div class="col-12 col-md-4 px-2 mb-3">
+                           <input type="file" name="photos" id="photo" style="display:none" multiple>
+                           <label for="photo" class="row flex-wrap g-3 p-3" title="Select at most four (4) images of your product">
+                               <img src="/static/images/picture.png" alt="..." class="col-6 img-fluid photo-preview-0">
+                               <img src="/static/images/picture.png" alt="..." class="col-6 img-fluid photo-preview-1">
+                               <img src="/static/images/picture.png" alt="..." class="col-6 img-fluid photo-preview-2">
+                               <img src="/static/images/picture.png" alt="..." class="col-6 img-fluid photo-preview-3">
+                           </label>
+                           <h6>You can select at most 4 images of your product.</h6>
+                       </div>
+                       <div class="col-12 col-md-6">
+                           <div class="mb-3">
+                               <label class="fs-5 d-block" for="product_name">Product Name</label>
+                               <span style="font-size: smaller; font-style: italic">Example: Rice and Stew with Grilled Fish</span>
+                               <input type="text" name="product_name" id="product_name" class="form-control noround"/>
+                           </div>
+                            <div class="mb-3">
+                               <label class="fs-5 d-block" for="desc">Description</label>
+                                <span style="font-size: smaller; font-style: italic">Example: Indulge in a symphony of flavors with our vibrant Rice and Stew, perfectly paired with succulent grilled fish. </span>
+                               <textarea name="desc" id="desc" rows="3" class="form-control noround"></textarea>
+                           </div>
+                           <div class="mb-3">
+                               <label class="fs-5 d-block" for="price">Price</label>
+                               <input type="number" name="price" id="price" class="form-control noround"/>
+                           </div>
+                            <div class="mt-1">
+                                <button type="button" class="btn btn-primary col-md-4 col-12 bnt-lg post-btn noround">UPLOAD</button>
+                            </div>
+                        </div>
+                    </div>
+            </form>
+        </div>
+      </div>
+    </div>
+</div>
+{% endblock main %}
+
+{% block customJS %}
+<script>
+    ///Toggle agents contact
+    function showContact(){
+        $('.contact').toggleClass('hidden');
+    }
+    //Handles reading and displaying image previews
+    function readURL(input) {
+        if (input.files && input.files.length > 0) {
+            for (let i = 0; i < input.files.length; i++) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    $('.photo-preview-' + i).attr('src', e.target.result);
+                }
+                reader.readAsDataURL(input.files[i]);
+            }
+        }
+    }    
+
+    $('#photo').change(function(){
+        readURL(this);
+    });
+    //Handling product upload
+    $('.post-btn').click(function(){
+        const myForm = document.querySelector('#forms');
+        const formData = new FormData(myForm);
+        formData.append("csrf_token", "{{csrf_token()}}");
+
+        $.ajax({
+            url: "/community-agent-create-product/",
+            type: "POST",
+            cache: false,
+            processData: false,
+            contentType: false,
+            data: formData,
+            success: function(response){
+                
+                if (response.status == 'success'){
+                    swal({
+                        title: "Completed!",
+                        text: "Your product has been successfully created.",
+                        icon: "success",
+                        timer: 3000,
+                        buttons: {
+                            confirm: {
+                                text: "OK",
+                                value: true,
+                                visible: true,
+                                className: "btn btn-success btn-sm",
+                                closeModal: true,
+                            },
+                        },
+                    });
+                    window.location.href='/community-agent-profile/';
+                }else {
+                    swal({
+                        title: "Error!",
+                        text: "Please complete all data feilds.",
+                        icon: "error",
+                        buttons: {
+                            confirm: {
+                                text: "OK",
+                                value: true,
+                                visible: true,
+                                className: "btn btn-danger btn-sm",
+                                closeModal: true,
+                            },
+                        },
+                    });
+                }
+            }
+        });
+    });
+</script>
+{% endblock customJS %}

@@ -1,0 +1,196 @@
+{% extends "caterers/dashboard_layout.html" %}
+
+{% block main %}
+
+    <div class="container">
+        {% if products %}
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card card-round">
+                <div class="card-header">
+                    <div class="card-head-row card-tools-still-right">
+                    <div class="h3 text-center">My Products</div>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                    <table class="table align-items-center mb-0">
+                        <thead class="thead-light">
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">Product Image</th>
+                            <th scope="col">Product Name</th>
+                            <th scope="col">Price (NGN)</th>
+                            <th scope="col">Edit</th>
+                            <th scope="col">Delete</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                            {% for product in products %}
+                        <tr>
+                            <td>{{loop.index}}</td>
+                            <td>
+                                {% set images = product.image.split('*') %}
+                                {% if images | length > 0 %}
+                                    <img class="w-50" src="/static/products/{{images[0]}}" alt="..." height="50" />
+                                {% endif %}
+                            </td>
+                            <td>{{product.name}}</td>
+                            <td>{{product.price}}</td>
+                            <td><a type="button" class="btn btn-primary btn-sm edit-product" data-id="{{product.id}}" data-bs-toggle="modal" data-bs-target="#editProduct">Edit</a></td>
+                            <td><a type="button" class="btn btn-danger btn-sm delete-product" data-id="{{product.id}}">Delete</a></td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                    </div>
+                </div>
+                </div>
+            </div>
+        </div>            
+        {% else %}
+        <div class="d-flex justify-content-center">
+            <h3>You have not enlisted any products yet.</h3>
+        </div>
+        {% endif %}  
+    </div>
+
+    <div class="modal fade" id="editProduct" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                <h6 class="modal-title" id="exampleModalLabel">
+                    <div class="d-flex align-items-center pt-2">
+                        <img 
+                            src="/static/photos/{{caterer.customer_deets.dp}}" 
+                            class="img-source img-fluid" 
+                            alt="Profile Image" 
+                            width="50" height="50" style="border-radius: 50%"
+                        />
+                        <span class="ms-2 fs-5">{{ caterer.customer_deets.firstname }} {{ caterer.customer_deets.lastname }}</span>
+                    </div>
+                </h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form action="{{url_for('caterer_create_product')}}" method="post" enctype="multipart/form-data" id="forms" class="shadow py-4">
+                        <input type="hidden" name="csrf_token" value="{{csrf_token()}}" />
+                        <div class="row justify-content-around">
+                            <div class="col-12 col-md-4 px-4 mb-3">
+                                <input type="file" name="photos" id="photo" style="display:none" multiple>
+                                <label for="photo" style="border: 1px solid #777" class="row flex-wrap g-3 p-3" title="Select at most four (4) images of your product">
+                                    <img src="/static/images/picture.png" alt="..." class="col-6 img-fluid photo-preview-0">
+                                    <img src="/static/images/picture.png" alt="..." class="col-6 img-fluid photo-preview-1">
+                                    <img src="/static/images/picture.png" alt="..." class="col-6 img-fluid photo-preview-2">
+                                    <img src="/static/images/picture.png" alt="..." class="col-6 img-fluid photo-preview-3">
+                                </label>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <div class="mb-3">
+                                    <label class="fs-5 d-block" for="food_name">Product Name</label>
+                                    <input type="text" name="food_name" id="food_name" class="form-control noround"/>
+                                </div>
+                                    <div class="mb-3">
+                                    <label class="fs-5 d-block" for="desc">Description</label>
+                                    <textarea name="desc" id="desc" rows="3" class="form-control noround"></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="fs-5 d-block" for="price">Price</label>
+                                    <input type="number" name="price" id="price" class="form-control noround"/>
+                                </div>
+                                    <div class="mt-1">
+                                        <button type="button" class="btn btn-primary col-lg-4 col-12 btn-sm post-btn noround">SAVE CHANGES</button>
+                                    </div>
+                                </div>
+                            </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+{% endblock main %}
+{% block customJS %}
+<script>
+    //Remove product list of products    
+    document.addEventListener('DOMContentLoaded', function() {
+        const removeItem= document.querySelectorAll('.delete-product');
+        removeItem.forEach(link => {
+            link.addEventListener('click', function(event) {     
+                const productItemInput = link.previousElementSibling;
+                if (productItemInput && productItemInput.classList.contains('productItem')) {
+                    const productid = productItemInput.value;
+                    alert(productid)
+                    alert('hi')
+                    swal({
+                        text: "Do you really want to remove this product?",
+                        icon: "warning",
+                        buttons: {
+                            confirm: {
+                                text: "Yes",
+                                className: "btn btn-sm btn-success",
+                            },
+                            cancel: {
+                                visible: true,
+                                className: "btn btn-sm btn-danger",
+                            },
+                        },
+                    }).then((Delete) => {
+                        if (Delete) {
+                            if (!productid){
+                                $.ajax({
+                                    url: '/caterer-delete-product/',
+                                    success: function(response){
+                                        swal({
+                                            text: "Product has been removed",
+                                            icon: "success",
+                                            buttons: false,
+                                        });
+                                        window.location.replace('/caterer-product/');
+                                    }
+                                });
+                            }else {
+                                $.ajax({
+                                    url: `/caterer-delete-product/${productid}/`,
+                                    type: "POST",
+                                    data: {"csrf_token": "{{csrf_token()}}"},
+                                    success: function(response){
+                                        swal({
+                                            text: "Product has been removed",
+                                            icon: "success",
+                                            buttons: false,
+                                        });
+                                        window.location.replace('/caterer-product/');
+                                    }
+                                });
+                            }  
+                        } else {
+                            swal.close();
+                        }
+                    });  
+                }
+            })
+        })
+    })
+
+    //Edit product
+    document.querySelectorAll('.edit-product').forEach(button => {
+        button.addEventListener('click', function() {
+            const productId = this.getAttribute('data-id');
+            alert(productId);
+            $('#food_name').text(product.name);
+        });
+    });
+    
+    document.querySelectorAll('.delete-product').forEach(button => {
+        button.addEventListener('click', function() {
+            const productId = this.getAttribute('data-id');
+            // Add your delete logic here
+        });
+    });
+    
+
+</script>
+{% endblock customJS %}
+

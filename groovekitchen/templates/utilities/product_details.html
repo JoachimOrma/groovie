@@ -1,0 +1,264 @@
+{% extends "utilities/layout.html" %}
+{% block banner %}
+<div class="container-xxl py-3 bg-dark hero-header mb-3 d-none d-lg-block">
+    <div class="container text-center my-3 pt-3 pb-3">
+        <nav aria-label="breadcrumb"> </nav>
+    </div>
+</div>
+{% endblock banner %}
+{% block main %}
+
+   <div class="container">
+        <div class="row justify-content-center py-2 shadow">
+            <div class="col text-center">
+                <h2>Product Details</h2>
+            </div>
+        </div>
+        <div class="row justify-content-center mb-2 p-3">
+        
+            <div class="col-lg-3 d-flex flex-column">
+                <div class="owl-carousel owl-theme">
+                    {% for image in product.image.split('*') %}
+                    <div class="item">
+                        <div class="my-2 d-flex justify-content-center">
+                            <img src="/static/products/{{image}}" alt="{{product.name}}" height="200" />
+                        </div>
+                    </div>
+                        {% endfor %}
+                </div>
+                <span class="mt-4 text-center" style="font-style: italic;">
+                    {% if product.customer_deets.customer_type == 'chef' %}
+                    <a>
+                        By Chef, {{product.customer_deets.firstname}} {{product.customer_deets.lastname}}
+                    </a>
+                    {% elif product.customer_deets.customer_type == 'carter' %}
+                    <a>
+                        By Carter, {{product.customer_deets.firstname}} {{product.customer_deets.lastname}}
+                    </a>
+                    {% endif %}
+                </span>
+            </div>    
+        </div>
+        <div class="row justify-content-center py-4">
+            <div class="col-lg-6 d-flex flex-column">
+                <h3 class="text-muted">Name: {{product.name}}</h3>
+                <h3 class="text-muted">Price: N{{product.price}}</h3>
+                <!-- <p>You have <span class="number_of_cart_items">{{number_of_cart_items}}</span> item(s) in your cart.</p> -->
+                
+                <p class="fs-5">Product Details</p>
+                <p class="text-justified">{{product.description}}</p>
+
+                <div class="d-flex flex-column flex-md-row justify-content-between mb-3">
+                    {% if session.get('useronline') != None %}
+                    <a href="#" class="btn btn-warning btn-md col-12 col-md-5 noround add-to-cart mb-3 mb-md-0">Add to Cart</a>
+                    {% else %}
+                    <a href="#" class="btn btn-warning btn-md col-12 col-md-5 noround mb-3 mb-md-0" data-bs-target="#loginModal" data-bs-toggle="modal">Add to Cart</a>
+                    {% endif %}
+                    <input type="hidden" name="cartItem" value="{{product.id}}" class="cartItem"/>
+                    <button class="btn btn-success btn-md col-12 col-md-5 noround checkout">Continue to Cart</button>
+                </div>
+
+                <div class="my-3">
+                    <p>Share this product with your friends.</p>
+                    <a href="#" class="share-it pe-3 py-2"> <i class="fab fa-facebook text-primary"></i> Share</a>
+                    <a href="#" class="share-it pe-3 py-2"> <i class="fab fa-twitter"></i> Share</a>
+                    <a href="#" class="pin-it py-2 pe-3"> <i class="fab fa-pinterest text-danger"></i> Pin it</a>
+                </div>
+            </div>
+        </div>
+        {% if products | length > 1 %}
+        <div class="row py-5">
+            <h3 class="text-center mb-5">Top Rated Products</h3>
+            <div class="tab-content">
+                <div id="tab-1" class="tab-pane fade show p-0 active">
+                    <div class="row g-4 justify-content-center justify-content-md-start mx-2 mx-lg-0">
+                        {% for item in products %}
+                        {% if item.id != product.id  %}
+                        <div class="col-xl-3 col-lg-4 col-md-6 col-12 wow fadeInUp" data-wow-delay="0.1s">
+                            <div class="product-item">
+        
+                                {% set images = item.image.split('*') %}
+                                 {% if images | length > 0 %}
+                                    <div class="position-relative bg-light overflow-hidden">
+                                        <img class="w-100" src="/static/products/{{images[0]}}" alt="..." height="170" title="Click image to view product details">
+                                        <input type="hidden" name="cartItem" class="cartItem" value="{{item.id}}">
+                                    </div>
+                                {% endif %}
+                                
+                                
+                                <div class="text-center p-2">
+                                    <a class="d-block h6 mb-2" href="">{{item.name}}</a>
+                                    <span class="text-primary me-1">N{{item.price}}</span>
+                                                               
+                                    {% if session.get('useronline') != None %}
+                                        {% if item.wishlist_deets %}
+                                    
+                                        <a type="button" class="d-flex justify-content-end wishlist">
+                                            <i class="fa-solid fa-heart wishlistIcon"></i>
+                                        </a>
+                                        <input type="hidden" name="cartItem" class="cartItem" value="{{item.id}}">
+                                        {% else %}
+                                        <a type="button" class="d-flex justify-content-end wishlist">
+                                            <i class="fa-regular fa-heart wishlistIcon"></i>
+                                        </a>
+                                        <input type="hidden" name="cartItem" class="cartItem" value="{{item.id}}">
+                                        {% endif %}
+                                    {% else %}
+                                    <a type="button" class="d-flex justify-content-end wishlist" data-bs-target="#loginModal" data-bs-toggle="modal">
+                                        <i class="fa-regular fa-heart wishlistIcon"></i>
+                                    </a>
+                                    {% endif %}
+                                    
+                                </div>
+                                <div class="d-flex">
+                                    <small class="w-50 text-center py-2 border" id="cart-container-1-{{item.id}}">
+                                        {% if session.get('useronline') != None %}
+                                        <a type="button" class="text-body add-to-cart"><i class="fa fa-shopping-bag text-primary me-2"></i>Add to cart</a>
+                                        {% else %}
+                                        <a type="button" class="text-body" data-bs-toggle="modal" data-bs-target="#loginModal"><i class="fa fa-shopping-bag text-primary me-2"></i>Add to cart</a>
+                                        {% endif %}
+                                        <input type="hidden" name="cartItem" class="cartItem" value="{{item.id}}">
+                                    </small>
+                                    <small class="w-50 text-center py-2 border">
+                                        <a type="button" class="text-body product-details"><i class="fa fa-eye text-primary me-2"></i>View Details</a>
+                                        <input type="hidden" name="cartItem" class="cartItem" value="{{item.id}}">
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+             </div>
+        </div>
+        {% endif %}
+    </div>
+
+{% endblock main %}
+
+
+{% block customJS %}
+<script>
+    const number_of_cart_items ="{{number_of_cart_items}}"
+
+    //Add product to cart
+    document.addEventListener('DOMContentLoaded', function() {
+        const addToCart = document.querySelectorAll('.add-to-cart');
+    
+        addToCart.forEach(link => {
+            link.addEventListener('click', function(event) {
+                event.preventDefault();
+                const cartItemInput = link.nextElementSibling;
+    
+                if (cartItemInput && cartItemInput.classList.contains('cartItem')) {
+                    const cart_id = cartItemInput.value;
+                    $.ajax({
+                        url: `/add-to-cart/${cart_id}/`,
+                        type: "POST",
+                        data: {"csrf_token": "{{csrf_token()}}"},
+                        success: function(response){
+                            if (response.status == 'success'){ 
+                                $('.number_of_cart_items').text(response.number_of_cart_items);
+                                $('.cart_items_count').text(response.number_of_cart_items);
+                                swal({
+                                    text: "Item added to cart",
+                                    icon: "success",
+                                    buttons: false,
+                                    timer: 2000,
+                                });
+                            }
+                        }
+                    })
+                }
+            })
+        })
+    })
+    
+    //Continue to cart
+    $('.checkout').click(function(){
+        if (number_of_cart_items > 0){
+            window.location.href='/cart-details/';    
+        }
+    });
+
+    $('.owl-carousel').owlCarousel({
+        items: 1, 
+        loop: true,
+        dots: true, 
+        nav: true,
+        autoplay: true,
+        navText: ["<span class='fa fa-angle-left'></span>", "<span class='fa fa-angle-right'></span>"]
+    })
+    $('.owl-nav').addClass('d-flex justify-content-between');
+    $('.owl-dots').addClass('text-danger');
+  
+    //View Product Details
+    document.addEventListener('DOMContentLoaded', function() {
+        const addToCart = document.querySelectorAll('.product-details');   
+        addToCart.forEach(link => {
+            link.addEventListener('click', function(event) {
+                event.preventDefault();
+                const cartItemInput = link.nextElementSibling;
+                
+                if (cartItemInput && cartItemInput.classList.contains('cartItem')) {
+                    const cart_id = cartItemInput.value;
+                    $.ajax({
+                        url: `/product-details/${cart_id}/`,
+                        type: "POST",
+                        data: {"csrf_token": "{{csrf_token()}}"},
+                        success: function(response){
+                            window.location.href=`/product-details/${cart_id}/`
+                        }
+                    })
+                }
+            })
+        })
+    })
+    //Add and remove product from wishlist
+    document.addEventListener('DOMContentLoaded', function() {
+        const wishlistButtons = document.querySelectorAll('.wishlist');
+    
+        wishlistButtons.forEach(button => {
+            button.addEventListener('click', function(event) {
+                event.preventDefault();
+    
+                // Find the relevant elements
+                const icon = button.querySelector('.wishlistIcon');
+                const cartItemInput = button.nextElementSibling;
+    
+                const cartId = cartItemInput.value;
+                const isRegular = icon.classList.contains('fa-regular');
+    
+                let actionURL;
+                if (isRegular) {
+                    actionURL = `/add-to-wishlist/${cartId}/`;
+                } else {
+                    actionURL = `/remove-from-wishlist/${cartId}/`;
+                }
+    
+                // Perform AJAX request
+                $.ajax({
+                    url: actionURL,
+                    type: 'POST',
+                    data: {"csrf_token": "{{csrf_token()}}" },
+                    success: function(response){
+                        if (response.status === 'success') {
+                            // Toggle icon class
+                            icon.classList.toggle('fa-regular');
+                            icon.classList.toggle('fa-solid');
+                            $('.wishlist_count').text(response.number_of_wishlist_item);
+                            swal({
+                                text: response.message,
+                                icon: "success",
+                                buttons: false,
+                                timer: 2000,
+                            });
+                        }
+                    } 
+                });
+            });
+        })
+    });
+</script>
+{% endblock customJS %}

@@ -1,0 +1,130 @@
+{% extends "chefs/dashboard_layout.html" %}
+
+{% block main %}
+
+<form action="" method="post">
+    <input type="hidden" name="csrf_token" value="{{csrf_token()}}" />
+    <div class="container">
+        {% if products %}
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card card-round">
+                <div class="card-header">
+                    <div class="card-head-row card-tools-still-right">
+                    <div class="h3 text-center">My Products</div>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                    <table class="table align-items-center mb-0">
+                        <thead class="thead-light">
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">Product Image</th>
+                            <th scope="col">Product Name</th>
+                            <th scope="col">Price (NGN)</th>
+                            <th scope="col">Edit</th>
+                            <th scope="col">Delete</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                            {% for product in products %}
+                        <tr>
+                            <td>{{loop.index}}</td>
+                            <td>
+                                {% set images = product.image.split('*') %}
+                                {% if images | length > 0 %}
+                                    <img class="w-50" src="/static/products/{{images[0]}}" alt="..." height="50" />
+                                {% endif %}
+                            </td>
+                            <td>{{product.name}}</td>
+                            <td>{{product.price}}</td>
+                            <td><a href="" type="button" class="btn btn-primary btn-sm">Edit</a></td>
+                            <input type="hidden" name="productItem" class="productItem" value="{{product.id}}">
+                            <td><a type="button" class="btn btn-danger btn-sm delete-product">Delete</a></td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                    </div>
+                </div>
+                </div>
+            </div>
+        </div>            
+        {% else %}
+        <div class="d-flex justify-content-center" style="margin-top: 200px;">
+            <h3>You haven't created any products yet.</h3>
+        </div>
+        {% endif %}  
+    </div>
+    
+</form>
+
+{% endblock main %}
+{% block customJS %}
+<script>
+     //Remove product list of products
+     
+     document.addEventListener('DOMContentLoaded', function() {
+        const removeItem= document.querySelectorAll('.delete-product');
+        removeItem.forEach(link => {
+            link.addEventListener('click', function(event) {     
+                const productItemInput = link.previousElementSibling;
+                if (productItemInput && productItemInput.classList.contains('productItem')) {
+                    const productid = productItemInput.value;
+                    alert(productid)
+                    alert('hi')
+                    swal({
+                        text: "Do you really want to remove this product?",
+                        icon: "warning",
+                        buttons: {
+                            confirm: {
+                                text: "Yes",
+                                className: "btn btn-sm btn-success",
+                            },
+                            cancel: {
+                                visible: true,
+                                className: "btn btn-sm btn-danger",
+                            },
+                        },
+                    }).then((Delete) => {
+                        if (Delete) {
+                            if (!productid){
+                                $.ajax({
+                                    url: '/chef-delete-product/',
+                                    success: function(response){
+                                        swal({
+                                            text: "Product has been removed",
+                                            icon: "success",
+                                            buttons: false,
+                                        });
+                                        window.location.replace('/chef-product/');
+                                    }
+                                });
+                            }else {
+                                $.ajax({
+                                    url: `/chef-delete-product/${productid}/`,
+                                    type: "POST",
+                                    data: {"csrf_token": "{{csrf_token()}}"},
+                                    success: function(response){
+                                        swal({
+                                            text: "Product has been removed",
+                                            icon: "success",
+                                            buttons: false,
+                                        });
+                                        window.location.replace('/chef-product/');
+                                    }
+                                });
+                            }  
+                        } else {
+                            swal.close();
+                        }
+                    });  
+                }
+            })
+        })
+    })
+    
+</script>
+{% endblock customJS %}
+
