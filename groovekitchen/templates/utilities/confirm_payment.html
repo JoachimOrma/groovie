@@ -1,0 +1,110 @@
+{% extends "utilities/layout.html" %}
+{% block banner %}
+<div class="container-xxl py-3 bg-dark hero-header mb-3 d-none d-lg-block">
+    <div class="container text-center my-3 pt-3 pb-3">
+        <nav aria-label="breadcrumb">
+
+        </nav>
+    </div>
+</div>
+{% endblock banner %}
+
+{% block main %}
+    <div class="container">
+        <div class="row justify-content-between">
+            <div class="col-lg-8 ps-lg-5 ps-md-3 col-md-6 mx-auto">
+                {% set messages = get_flashed_messages(with_categories=True) %}
+                  {% for category, message in messages %}
+                    {% if category == 'error' %}
+                        <p class="alert alert-danger"><i class="fa fa-circle-xmark"></i> {{message}}</p>
+                    {% endif %}
+                  {% endfor %}
+                <div class="printable">
+                    <h2 class="text-center">GROOVIE KITCHEN</h2>
+                    <div class="d-flex flex-column">
+                        <span>Customer Name: {{payment_deets.firstname}} {{payment_deets.lastname}} </span>
+                        <span>Customer Email: {{payment_deets.email}} </span>
+                    </div>
+                    <hr />
+                    <div class="vstack mb-3">
+                        <table class="table">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Product Name</th>
+                                    <th>Qunatity</th>
+                                    <th>Price (NGN)</th>
+                                    <th>Total (NGN)</th>
+                                </tr>
+                                {% for product in product_list %}
+                                <tr>
+                                    <td>{{product.id}}</td>
+                                    <td>{{product.name}}</td>
+                                    <td>{{product.quantity}}</td>
+                                    <td>{{product.price}}</td>
+                                    <td>{{product.price * product.quantity}}</td>
+                                </tr>
+                                {% endfor %}
+                                <tr class="text-dark h6">
+                                    <td>TOTAL</td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td>{{payment_deets.amount}}</td>
+                                </tr>
+                            </table>
+                        
+                    </div>
+                </div>
+                <div class="vstack py-4">
+                    <h6><i class="fa fa-circle-check"></i> Payment information</h6>
+                    <span>To complete your order, continue to payment page. You are about to pay a sum of <span class="fw-bold text-dark"> N{{payment_deets.amount}}</span> only.</span>
+                </div>
+                <div class="d-flex flex-lg-row flex-column align-items-center justify-content-md-between">
+                    <button class="btn btn-success btn-lg mb-3 col-12 col-md-5 noround checkout">Continue to payment</button>
+                    <button class="btn btn-danger btn-lg mb-3 col-12 col-md-5 noround" onclick="window.location.replace('/cart-details/')">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock main %}
+
+{% block footer %}
+{% endblock footer %}
+
+{% block customJS %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const addToCart = document.querySelectorAll('.add-to-cart');
+    
+        addToCart.forEach(link => {
+            link.addEventListener('click', function(event) {
+                
+                const cartItemInput = link.nextElementSibling;
+    
+                if (cartItemInput && cartItemInput.classList.contains('cartItem')) {
+                    const cart_id = cartItemInput.value;
+                    $.ajax({
+                        url: `/add-to-cart/${cart_id}/`,
+                        type: "POST",
+                        data: {"csrf_token": "{{csrf_token()}}"},
+                        success: function(response){
+                            if (response.status == 'success'){
+                                window.location.replace('/cart-details/');
+                            }
+                        }
+                    })
+                }
+            })
+        })
+    })
+
+    $('#home-delivery').click(function(){
+        $('#address').toggleClass('hidden');
+    })
+
+    $('.checkout').click(function(){
+        window.location.href='/paystack/initialize/';
+    })
+    
+</script>
+{% endblock customJS %}

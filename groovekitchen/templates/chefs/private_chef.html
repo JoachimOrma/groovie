@@ -1,0 +1,62 @@
+{% extends 'utilities/layout.html' %}
+{% block hero %}{% endblock hero %}
+
+{% block main %}
+    <div class="container-xxl py-5">
+        <div class="container">
+            <div class="row g-5 align-items-center justify-content-center">
+                <div class="col">
+                    <h1 class="mb-4">As a Professional Chef</h1>
+                    <p class="mb-4">
+                        Tempor erat elitr rebum at clita. Diam dolor diam ipsum sit. Aliqu diam amet diam et eos erat ipsum et lorem et sit,
+                        sed stet lorem sit. Tempor erat elitr rebum at clita. Diam dolor diam ipsum sit. Aliqu diam amet diam et eos.
+                        Clita erat ipsum et lorem et sit, sed stet lorem sit clita duo justo magna dolore erat amet.
+                        Lorem, ipsum dolor sit amet consectetur adipisicing elit. Odit animi eius reprehenderit officiis perferendis. Voluptates,
+                        voluptatibus. Sequi dolorum iure numquam iste, harum vitae, ullam eum veniam enim modi aperiam possimus.
+                    </p>
+                    <p class="mb-4">
+                        Tempor erat elitr rebum at clita. Diam dolor diam ipsum sit. Aliqu diam amet diam et eos erat ipsum et lorem et sit,
+                        sed stet lorem sit. Tempor erat elitr rebum at clita. Diam dolor diam ipsum sit. Aliqu diam amet diam et eos.
+                        Clita erat ipsum et lorem et sit, sed stet lorem sit clita duo justo magna dolore erat amet.
+                        Lorem, ipsum dolor sit amet consectetur adipisicing elit. Odit animi eius reprehenderit officiis perferendis. Voluptates,
+                        voluptatibus. Sequi dolorum iure numquam iste, harum vitae, ullam eum veniam enim modi aperiam possimus.
+                    </p>
+                    {% if customer.customer_type != 'chef' and customer.customer_type != 'carter' and customer.customer_type != 'vendor' %}
+                        <a class="btn btn-primary" href="{{url_for('chef_registration')}}">Continue</a>
+                    {% else %}
+                        <button class="btn btn-primary existing-chef">Continue</button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock main %}
+{% block customJS %}
+<script>
+    $('.existing-chef').click(function(){
+        let comment = '';
+        if ("{{customer.customer_type}}" == 'chef'){
+            comment = "You are already registered as a professional chef."
+        } else if ("{{customer.customer_type}}" == 'carter'){
+            comment = "You are already registered as a professional carter."
+        } else {
+            comment = "You are already registered as a community agent."
+        }
+        swal({
+            title: `Dear, {{customer.firstname}}`,
+            text: ${comment},
+            icon: "info",
+            //timer: 3000,
+            buttons: {
+                confirm: {
+                    text: "OK",
+                    value: true,
+                    visible: true,
+                    className: "btn btn-success btn-sm",
+                    closeModal: true,
+                },
+            },
+        });
+    })
+</script>
+{% endblock customJS %}

@@ -1,0 +1,393 @@
+{% extends "utilities/layout.html" %}
+{% block banner %}
+<div class="container-xxl py-3 bg-dark hero-header mb-3 d-none d-lg-block">
+    <div class="container text-center my-3 pt-3 pb-3">
+        <nav aria-label="breadcrumb">
+
+        </nav>
+    </div>
+</div>
+{% endblock banner %}
+
+{% block main %}
+    <div class="container">
+        <div class="row justify-content-between">
+            {% if product_list %}
+            <div class="col-lg-8 col-md-6 shopping-cart" style="overflow:auto">
+              <div style="height:100%">
+                <h2>Shopping Cart</h2>
+                <div class="d-flex justify-content-between">
+                    <p class="text-muted">Store / Shopping cart</p>
+                    <button title="Clear your shopping cart." class="btn btn-danger btn-sm clear-cart">Clear cart</button> 
+                </div>
+                <hr />
+               {% for product in product_list %}
+                <div class="row align-items-center">
+                    <div class="col">
+                        <div class="d-flex align-items-center">
+                          {% set images = product.image.split('*') %}
+                            {% if images | length > 0 %}
+                            <img src="/static/products/{{images[0]}}" alt="..." width="100" height="50"/>
+                            {% endif %}
+                            <div class="text-muted ms-2 d-flex flex-column">
+                                <span class="me-auto text-dark" style=" overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">{{item.name}}</span>
+                                <span>NGN{{product.price}}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-1 justify-content-end">
+                    <div class="col d-flex align-items-center">  
+                        <a type="button" class="delete-item me-4" title="Remove from cart"><i class="fas fa-trash text-danger" style="font-size: small"></i> <span class="text-muted d-none d-md-inline-block" style="font-size: small"> Remove </span></a>
+                        
+                        {% if session.get('useronline') and product.wishlist_deets %}
+                           
+                        <a type="button" class="d-flex justify-content-end align-items-center wishlist" title="Add to wishlist">
+                            <i class="fa-solid fa-heart wishlistIcon" style="font-size: medium"></i> <span class="ms-2 text-muted d-none d-md-inline-block" style="font-size: small"> Save </span>
+                        </a>
+                        <input type="hidden" name="cartItem" class="cartItem" value="{{product.id}}">
+                        {% else %}
+                        <a type="button" class="d-flex justify-content-end align-items-center wishlist" title="Add to wishlist">
+                            <i class="fa-regular fa-heart wishlistIcon" style="font-size: medium"></i> <span class="ms-2 text-muted d-none d-md-inline-block" style="font-size: small"> Save </span>
+                        </a>
+                        <input type="hidden" name="cartItem" class="cartItem" value="{{product.id}}">
+                        {% endif %}
+                    </div>
+                    <div class="col d-flex align-items-center justify-content-end">
+                        <a class="text-primary remove-from-cart me-3" href="#" title="Reduce item quantity"><i class="fa fa-minus" style="font-size: 0.8rem"></i></a>
+                        <input type="hidden" name="cartitem" class="cartItem" value="{{product.id}}">
+                        <input type="text" style="width: 25px; font-size: 0.8rem" value="{{product.quantity}}" class="text-center ms-2" disabled/>
+                        <a class="text-primary me-2 add-to-cart ms-3" href="#" title="Increase item quantity"><i class="fa fa-plus" style="font-size: 0.8rem"></i></a>
+                    </div>
+                    <div class="col d-flex flex-column align-items-end text-muted mb-1">
+                        <span style="font-size: smaller">x{{product.quantity}} items</span>
+                        <span class="text-dark">NGN{{product.price * product.quantity}} </span>
+                    </div>
+                    <hr />
+                </div>
+                {% endfor %}
+                
+              </div>
+            </div>
+
+            <div class="col-lg-4 ps-lg-5 ps-md-3 col-md-6">
+                <div class="row">
+                    <div class="col d-flex flex-column" style="line-height: 2rem;">
+                        <div>
+                            <p class="mb-2 text-dark"><i class="fa fa-circle-check"></i> Delivery options </p>
+                            <input type="radio" name="delivery" id="pickup" value="pickup" onclick="toggleAddressBox();"/> <label for="pickup">Pickup</label>
+                            <input type="radio" name="delivery" id="home-delivery" value="home-delivery" class="ms-3" onclick="toggleAddressBox();"/> <label for="home-delivery">Home Delivery </label>
+                            <div id="addressBox" style="display: none;">
+                                <span>Provide your home address for home delivery.</span>
+                                <input type="address" name="address" placeholder="Enter delivery address" class="form-control noround"/>
+                            </div>
+                        </div>
+                        <hr />
+                        <h4 style="font-style: italic">Checkout</h4>
+                        <div class="d-flex text-muted">
+                            <span>Subtotal</span>
+                            <span class="ms-auto">N{{final_total}}</span>
+                        </div>
+                        <div class="d-flex text-muted">
+                            <span>Delivery</span>
+                            <span class="ms-auto">Free</span>
+                        </div>
+                        <div class="d-flex fw-bold fs-5 text-dark">
+                            <span>TOTAL</span>
+                            <span class="ms-auto">N{{final_total}}</span>
+                        </div>
+                        <hr />
+                        <button class="btn btn-success btn-lg mb-3 col-12 noround checkout">Checkout {% if final_total %}({{final_total}}){% endif %}</button>
+                    </div>
+                </div>
+            </div>
+          
+          {% else %}
+            <div class="my-4 d-flex flex-column justify-content-center align-items-center">
+                <h2>Shopping Cart</h2>
+                <i class="fas fa-shopping-cart display-3"></i>
+                <p>Your shopping cart is empty.</p>
+                <button onclick="window.location.href='/top-listing/'" class="btn btn-primary"> Start shopping</button>
+            </div>
+          {% endif %}
+        </div>
+    </div>
+
+    <h2 class="text-center py-5 bg-light">Top Products</h2>
+    <div class="tab-content">
+    <div id="tab-1" class="tab-pane fade show p-0 active">
+        <div class="row g-4 justify-content-center justify-content-lg-start">
+            {% for item in products %}
+            {% if item.id != product.id %}
+                <div class="col-xl-3 col-lg-4 col-md-5 col-11 wow fadeInUp" data-wow-delay="0.1s">
+                    <div class="product-item">
+                        {% set images = item.image.split('*') %}
+                            {% if images | length > 0 %}
+                            <div class="position-relative bg-light overflow-hidden">
+                                <img class="w-100" src="/static/products/{{images[0]}}" alt="..." height="170" title="Click image to view product details">
+                                <input type="hidden" name="cartItem" class="cartItem" value="{{item.id}}">
+                            </div>
+                        {% endif %}
+                        <div class="text-center p-2">
+                            <a class="d-block h6 mb-2" href="">{{item.name}}</a>
+                            <span class="text-primary me-1">N{{item.price}}</span>
+                            
+                            {% if session.get('useronline') and item.wishlist_deets %}
+                            
+                            <a type="button" class="d-flex justify-content-end wishlist">
+                                <i class="fa-solid fa-heart wishlistIcon"></i>
+                            </a>
+                            <input type="hidden" name="cartItem" class="cartItem" value="{{item.id}}">
+                            {% else %}
+                            <a type="button" class="d-flex justify-content-end wishlist">
+                                <i class="fa-regular fa-heart wishlistIcon"></i>
+                            </a>
+                            <input type="hidden" name="cartItem" class="cartItem" value="{{item.id}}">
+                            {% endif %}
+                            
+                        </div>
+                        <div class="d-flex border-top">
+                            <small class="w-50 text-center py-2">
+                                <input type="hidden" name="cartItem" class="cartItem" value="{{item.id}}">
+                                <input type="hidden" />
+                                <a type="button" class="text-body add-to-cart"><i class="fa fa-shopping-bag text-primary me-2"></i>Add to cart</a>
+                            </small>
+                            <small class="w-50 text-center py-2">
+                                <a type="button" class="text-body product-details"><i class="fa fa-eye text-primary me-2"></i>View Details</a>
+                                <input type="hidden" name="cartItem" class="cartItem" value="{{item.id}}">
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+    </div>
+{% endblock main %}
+
+{% block footer %}
+{% endblock footer %}
+
+{% block customJS %}
+<script>
+    //Add product to cart
+    document.addEventListener('DOMContentLoaded', function() {
+        const addToCart = document.querySelectorAll('.add-to-cart');
+        addToCart.forEach(link => {
+            link.addEventListener('click', function(event) {     
+                const cartItemInput = link.previousElementSibling.previousElementSibling;
+                if (cartItemInput && cartItemInput.classList.contains('cartItem')) {
+                    const cart_id = cartItemInput.value;
+                    $.ajax({
+                        url: `/add-to-cart/${cart_id}/`,
+                        type: "POST",
+                        data: {"csrf_token": "{{csrf_token()}}"},
+                        success: function(response){
+                            if (response.status == 'success'){
+                                window.location.replace('/cart-details/');
+                            }
+                        }
+                    })
+                }
+            })
+        })
+    })
+
+    //Remove product from cart
+    document.addEventListener('DOMContentLoaded', function() {
+        const removeFromCart = document.querySelectorAll('.remove-from-cart');
+        removeFromCart.forEach(link => {
+            link.addEventListener('click', function(event) {   
+                const cartItemInput = link.nextElementSibling;
+                if (cartItemInput && cartItemInput.classList.contains('cartItem')) {
+                    const cart_id = cartItemInput.value;
+                    $.ajax({
+                        url: `/remove-from-cart/${cart_id}/`,
+                        type: "POST",
+                        data: {"csrf_token": "{{csrf_token()}}"},
+                        success: function(response){
+                            if (response.status == 'success'){
+                                window.location.replace('/cart-details/');
+                            }
+                        }
+                    })
+                }
+            })
+        })
+    })
+    
+    //View Product Details
+    document.addEventListener('DOMContentLoaded', function() {
+        const addToCart = document.querySelectorAll('.product-details');   
+        addToCart.forEach(link => {
+            link.addEventListener('click', function(event) {
+                event.preventDefault();
+                const cartItemInput = link.nextElementSibling;
+                
+                if (cartItemInput && cartItemInput.classList.contains('cartItem')) {
+                    const cart_id = cartItemInput.value;
+                    $.ajax({
+                        url: `/product-details/${cart_id}/`,
+                        type: "POST",
+                        data: {"csrf_token": "{{csrf_token()}}"},
+                        success: function(response){
+                            window.location.href=`/product-details/${cart_id}/`
+                        }
+                    })
+                }
+            })
+        })
+    })
+
+    //Add and remove product from wishlist
+    document.addEventListener('DOMContentLoaded', function() {
+        const wishlistButtons = document.querySelectorAll('.wishlist');
+    
+        wishlistButtons.forEach(button => {
+            button.addEventListener('click', function(event) {
+                event.preventDefault();
+    
+                // Find the relevant elements
+                const icon = button.querySelector('.wishlistIcon');
+                const cartItemInput = button.nextElementSibling;
+    
+                const cartId = cartItemInput.value;
+                const isRegular = icon.classList.contains('fa-regular');
+    
+                let actionURL;
+                if (isRegular) {
+                    actionURL = `/add-to-wishlist/${cartId}/`;
+                } else {
+                    actionURL = `/remove-from-wishlist/${cartId}/`;
+                }
+    
+                // Perform AJAX request
+                $.ajax({
+                    url: actionURL,
+                    type: 'POST',
+                    data: {"csrf_token": "{{csrf_token()}}" },
+                    success: function(response){
+                        if (response.status === 'success') {
+                            // Toggle icon class
+                            icon.classList.toggle('fa-regular');
+                            icon.classList.toggle('fa-solid');
+        
+                            swal({
+                                text: response.message,
+                                icon: "success",
+                                buttons: false,
+                                timer: 2000,
+                            });
+                            window.location.replace('/cart-details/');
+                        }
+                    } 
+                });
+            });
+        })
+    });
+        
+    // Continue to checkout
+    $('.checkout').click(function(){
+        $.ajax({
+            url: "/checkout/",
+            type: "POST",
+            data: {
+                "firstname": "{{customer.firstname}}",
+                "lastname": "{{customer.lastname}}",
+                "email": "{{customer.email}}",
+                "amount": "{{final_total}}",
+                "csrf_token": "{{csrf_token()}}"
+            },
+            success: function(response){
+                window.location.replace('/checkout/');
+            },
+        });
+    })
+    
+    $('.clear-cart').click(function(){
+        const text = "Do you really want to clear your cart?";
+        const comment = "Your cart has been cleared."
+        const url = "/clear-cart/";
+        const itemid = '';
+        handleDeleteConfirmation(url, text, comment, itemid);
+    })
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        const text = "Do you really want to remove this item?";
+        const comment = "Item has been removed";
+        const url = "delete-item";
+        const removeItem= document.querySelectorAll('.delete-item');
+        removeItem.forEach(link => {
+            link.addEventListener('click', function(event) {     
+                const cartItemInput = link.nextElementSibling.nextElementSibling;
+                if (cartItemInput && cartItemInput.classList.contains('cartItem')) {
+                    const itemid = cartItemInput.value;
+                    handleDeleteConfirmation(url, text, comment, itemid);   
+                }
+            })
+        })
+    })
+    
+    function handleDeleteConfirmation(url, text, comment, itemid){
+        swal({
+            text: `${text}`,
+            icon: "warning",
+            buttons: {
+            confirm: {
+                text: "Yes",
+                className: "btn btn-sm btn-success",
+            },
+            cancel: {
+                visible: true,
+                className: "btn btn-sm btn-danger",
+            },
+            },
+        }).then((Delete) => {
+            if (Delete) {
+                if (!itemid){
+                    $.ajax({
+                        url: `${url}`,
+                        success: function(response){
+                            swal({
+                                text: `${comment}`,
+                                icon: "success",
+                                buttons: false,
+                            });
+                            window.location.replace('/cart-details/');
+                        }
+                    });
+                }else {
+                    $.ajax({
+                        url: `/${url}/${itemid}`,
+                        type: "POST",
+                        data: {"csrf_token": "{{csrf_token()}}"},
+                        success: function(response){
+                            swal({
+                                text: `${comment}`,
+                                icon: "success",
+                                buttons: false,
+                            });
+                            window.location.replace('/cart-details/');
+                        }
+                    });
+                }
+                
+            } else {
+                swal.close();
+            }
+        }); 
+    }
+
+    function toggleAddressBox() {
+        var deliveryOption = document.querySelector('input[name="delivery"]:checked').value;
+        var addressBox = document.getElementById('addressBox');
+        
+        if (deliveryOption === 'home-delivery') {
+            addressBox.style.display = 'block';
+        } else {
+            addressBox.style.display = 'none';
+        }
+    }
+</script>
+{% endblock customJS %}

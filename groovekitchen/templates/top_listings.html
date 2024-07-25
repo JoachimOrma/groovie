@@ -1,0 +1,241 @@
+{% extends 'utilities/layout.html' %}
+{% block hero %} {% endblock hero %}
+{% block main %}
+<div class="row g-0 gx-5 align-items-center justify-content-center mb-3">
+
+    <div class="col-md-5 mt-3 mt-md-0">
+        <div class="section-header text-center text-md-start wow fadeInUp" data-wow-delay="0.1s">
+            <h4 class="display-6 mb-3">Fetaured Products</h4>
+        </div>
+    </div>
+    <div class="col-md-5 text-end wow slideInRight" data-wow-delay="0.1s">
+        <ul class="nav nav-pills d-inline-flex justify-content-end me-3 me-md-0">
+            <li class="nav-item me-2" title="Continue to Cart"> 
+                <a class="btn btn-outline-primary border-2" href="{{url_for('cart_details')}}">
+                    <i class="fa fa-shopping-cart"></i> <span class="cart_items_count">{{number_of_cart_items}}</span>
+                </a>
+            </li>
+            <li class="nav-item me-2" title="Your Wishlist">
+                <a class="btn btn-outline-primary border-2" href="{{url_for('wishlist')}}">
+                    <i class="fa fa-heart"></i> <span class="wishlist_count"> {{number_of_wishlist_item}} </span>
+                </a>
+            </li>
+        </ul>
+    </div>
+       
+</div>
+    <div class="tab-content">
+        <div id="tab-1" class="tab-pane fade show p-0 active">
+            <div class="row g-4 justify-content-center justify-content-md-start mx-2 mx-lg-0">
+                {% for product in products %}
+                <div class="col-xl-3 col-lg-4 col-md-6 col-12 wow fadeInUp" data-wow-delay="0.1s">
+                    <div class="product-item">
+
+                        {% set images = product.image.split('*') %}
+                            {% if images | length > 0 %}
+                            <div class="position-relative bg-light overflow-hidden">
+                                <img class="w-100" src="/static/products/{{images[0]}}" alt="..." height="170" title="Click image to view product details">
+                                <input type="hidden" name="cartItem" class="cartItem" value="{{product.id}}">
+                            </div>
+                        {% endif %}
+                        
+                        
+                        <div class="text-center p-2">
+                            <a class="d-block h6 mb-2" href="">{{product.name}}</a>
+                            <span class="text-primary me-1">N{{product.price}}</span>
+                                                        
+                            {% if session.get('useronline') != None %}
+                                {% if product.wishlist_deets %}
+                                
+                                <a type="button" class="d-flex justify-content-end wishlist">
+                                    <i class="fa-solid fa-heart wishlistIcon"></i>
+                                </a>
+                                <input type="hidden" name="cartItem" class="cartItem" value="{{product.id}}">
+                                {% else %}
+                                <a type="button" class="d-flex justify-content-end wishlist">
+                                    <i class="fa-regular fa-heart wishlistIcon"></i>
+                                </a>
+                                <input type="hidden" name="cartItem" class="cartItem" value="{{product.id}}">
+                                {% endif %}
+                            {% else %}
+                            <a type="button" class="d-flex justify-content-end wishlist" data-bs-target="#loginModal" data-bs-toggle="modal">
+                                <i class="fa-regular fa-heart wishlistIcon"></i>
+                            </a>
+                            {% endif %}
+                            
+                        </div>
+                        <div class="d-flex quantity">
+                            {% if product.cart_deets %}
+                            {% set cart_item = product.cart_deets %}
+                            {% for cart in cart_item %}
+                                <small class="w-50 text-center py-2 border" id="cart-container-0-{{product.id}}">
+                                    <div class="col d-flex align-items-center justify-content-center">
+                                        <a class="text-primary remove-from-cart me-3" type="button" title="Reduce item quantity"><i class="fa fa-minus" style="font-size: 0.8rem"></i></a>
+                                        <span style="width: 25px; font-size: 0.8rem" class="text-center ms-2"><span id="qty-{{product.id}}">{{cart.quantity}}</span></span>
+                                        <a class="text-primary me-2 add-to-cart ms-3" type="button" title="Increase item quantity"><i class="fa fa-plus" style="font-size: 0.8rem"></i></a>
+                                        <input type="hidden" name="cartitem" class="cartItem" value="{{product.id}}">
+                                    </div>
+                                </small>
+                            {% endfor %}
+                            {% else %}
+                                <small class="w-50 text-center py-2 border" id="cart-container-1-{{product.id}}">
+                                    {% if session.get('useronline') != None %}
+                                    <a type="button" class="text-body add-to-cart"><i class="fa fa-shopping-bag text-primary me-2"></i>Add to cart</a>
+                                    {% else %}
+                                    <a type="button" class="text-body" data-bs-toggle="modal" data-bs-target="#loginModal"><i class="fa fa-shopping-bag text-primary me-2"></i>Add to cart</a>
+                                    {% endif %}
+                                    <input type="hidden" name="cartItem" class="cartItem" value="{{product.id}}">
+                                </small>
+                            {% endif %}
+                            <small class="w-50 text-center py-2 border">
+                                <a type="button" class="text-body product-details"><i class="fa fa-eye text-primary me-2"></i>View Details</a>
+                                <input type="hidden" name="cartItem" class="cartItem" value="{{product.id}}">
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+{% endblock main %}
+{% block customJS %}
+<script>
+   // Add products to cart
+    document.addEventListener('DOMContentLoaded', function() {
+        const addToCart = document.querySelectorAll('.add-to-cart');   
+        addToCart.forEach(link => {
+            link.addEventListener('click', function(event) {
+                event.preventDefault();
+                const cartItemInput = link.nextElementSibling;
+    
+                if (cartItemInput && cartItemInput.classList.contains('cartItem')) {
+                    const cart_id = cartItemInput.value;
+                    $.ajax({
+                        url: `/add-to-cart/${cart_id}/`,
+                        type: "POST",
+                        data: {"csrf_token": "{{csrf_token()}}"},
+                        success: function(response){
+                            if (response.status == 'success'){
+                                if (response.cart_list['productid'] == cart_id){
+                                    $(`#qty-${response.cart_list['productid']}`).text(response.cart_list['quantity']);
+                                    if (response.cart_list['quantity'] == 1){
+                                        $(".cart-container-0-${cart_id}").load(location.href + ".cart-container-0-${cart_id}")
+                                    }
+                                }                           
+                                $('.cart_items_count').text(response.number_of_cart_items);
+                                swal({
+                                    text: "Item added to cart",
+                                    icon: "success",
+                                    buttons: false,
+                                    timer: 2000,
+                                });
+                            }
+                        },
+                    })
+                }
+            })
+        })
+    })
+
+    //Remove product from cart
+    document.addEventListener('DOMContentLoaded', function() {
+        const removeFromCart = document.querySelectorAll('.remove-from-cart');
+        removeFromCart.forEach(link => {
+            link.addEventListener('click', function(event) {   
+                const cartItemInput = link.nextElementSibling.nextElementSibling.nextElementSibling;
+                if (cartItemInput && cartItemInput.classList.contains('cartItem')) {
+                    const cart_id = cartItemInput.value;
+                    $.ajax({
+                        url: `/remove-from-cart/${cart_id}/`,
+                        type: "POST",
+                        data: {"csrf_token": "{{csrf_token()}}"},
+                        success: function(response){
+                            if (response.status == 'success'){
+                                if (response.cart_list['productid'] == cart_id) {
+                                    $(`#qty-${response.cart_list['productid']}`).text(response.cart_list['quantity']);
+
+                                    if (response.cart_list['quantity'] == 0){
+                                        $(".cart-container-1-${cart_id}").load(location.href + ".cart-container-1-${cart_id}")
+                                    }
+                                }   
+                            }
+                        }
+                    })
+                }
+            })
+        })
+    })
+
+    //View Product Details
+    document.addEventListener('DOMContentLoaded', function() {
+        const addToCart = document.querySelectorAll('.product-details');   
+        addToCart.forEach(link => {
+            link.addEventListener('click', function(event) {
+                event.preventDefault();
+                const cartItemInput = link.nextElementSibling;
+                
+                if (cartItemInput && cartItemInput.classList.contains('cartItem')) {
+                    const cart_id = cartItemInput.value;
+                    $.ajax({
+                        url: `/product-details/${cart_id}/`,
+                        type: "POST",
+                        data: {"csrf_token": "{{csrf_token()}}"},
+                        success: function(response){
+                            window.location.href=`/product-details/${cart_id}/`
+                        }
+                    })
+                }
+            })
+        })
+    })
+
+    //Add and remove product from wishlist
+    document.addEventListener('DOMContentLoaded', function() {
+        const wishlistButtons = document.querySelectorAll('.wishlist');
+    
+        wishlistButtons.forEach(button => {
+            button.addEventListener('click', function(event) {
+                event.preventDefault();
+    
+                // Find the relevant elements
+                const icon = button.querySelector('.wishlistIcon');
+                const cartItemInput = button.nextElementSibling;
+    
+                const cartId = cartItemInput.value;
+                const isRegular = icon.classList.contains('fa-regular');
+    
+                let actionURL;
+                if (isRegular) {
+                    actionURL = `/add-to-wishlist/${cartId}/`;
+                } else {
+                    actionURL = `/remove-from-wishlist/${cartId}/`;
+                }
+    
+                // Perform AJAX request
+                $.ajax({
+                    url: actionURL,
+                    type: 'POST',
+                    data: {"csrf_token": "{{csrf_token()}}" },
+                    success: function(response){
+                        if (response.status === 'success') {
+                            // Toggle icon class
+                            icon.classList.toggle('fa-regular');
+                            icon.classList.toggle('fa-solid');
+                            $('.wishlist_count').text(response.number_of_wishlist_item);
+                            swal({
+                                text: response.message,
+                                icon: "success",
+                                buttons: false,
+                                timer: 2000,
+                            });
+                        }
+                    } 
+                });
+            });
+        })
+    });
+     
+</script>
+{% endblock customJS %}

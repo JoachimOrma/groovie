@@ -1,0 +1,51 @@
+{% extends 'utilities/layout.html' %}
+{% block main %}
+
+    <h2 class="text-center py-3 mb-5 bg-light">Popular Chefs</h2>
+    <div class="tab-content">
+        <div id="tab-1" class="tab-pane fade show p-0 active">
+            <div class="row g-4 justify-content-center justify-content-md-start">
+              {% for chef in chefs %}
+                {% if chef.customer_deets.dp %}
+                  <div class="col-lg-3 col-md-6 col-11 wow fadeInUp" data-wow-delay="0.1s">
+                    <div class="card chef-card">
+                        <input type="hidden" class="chef-input" name="chefId" value="{{chef.id}}" />
+                        <img src="/static/photos/{{ chef.customer_deets.dp }}" alt="..." height="210" style="object-fit: cover;">
+                        <div class="footer p-2 d-flex flex-column text-center" style="font-size: small;">
+                            <span class="h6">{{ chef.customer_deets.firstname }} {{chef.customer_deets.lastname}}</span>
+                            <span class="card-text text-format" style="background: lavender; border-radius: 4px"> {{ chef.specialities }}</span>
+                            <span class="text-muted px-2" style="font-style: italic;"><i class="fas fa-location-dot text-warning"></i> {{chef.city}}, {{chef.state }} State</span>
+                        </div>
+                    </div>
+                  </div>
+                {% endif %}
+              {% endfor %}
+            </div>
+        </div>
+    </div>
+
+{% endblock main %}
+{% block customJS %}
+<script>
+    const chefCards = document.querySelectorAll('.chef-card');
+
+    chefCards.forEach(card => {
+        card.addEventListener('click', () => {
+            const input = card.querySelector('.chef-input');
+            
+            if (input) {
+              const chefId = input.value;
+              $.post({
+                url: `/chef-view-count/${chefId}`,
+                data: {"csrf_token": "{{csrf_token()}}"},
+                success: function(response){
+                  if (response.status=='success')
+                  window.location.replace(`/chef-details/${chefId}/`);
+                }
+              })
+            }
+        });
+    
+    });
+</script>
+{% endblock customJS %}

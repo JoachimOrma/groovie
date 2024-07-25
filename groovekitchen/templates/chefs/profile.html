@@ -1,0 +1,257 @@
+{% extends "chefs/dashboard_layout.html" %}
+
+{% block main %}
+
+<form action="" method="post">
+    <input type="hidden" name="csrf_token" value="{{csrf_token()}}" />
+
+    <div class="card col-lg-10 mx-auto">
+        <div class="card-body">
+            <div class="mb-4 picture_wrapper border-0 bg-danger">
+                <img src="/static/photos/{% if chef.customer_deets.dp %}{{chef.customer_deets.dp}}{% else %}avatar.png{% endif %}" alt="..." class="img-fluid"/>
+            </div>
+            <div class="d-flex align-items-center">
+                <h2>{{chef.customer_deets.firstname}}, {{chef.customer_deets.lastname}}</h2>
+                {% if chef.verification == 'verified' %}
+                <h6 class="ms-3"><img src="/static/photos/verify.png" width="30"/></h6>
+                {% else %}
+                <h6 class="ms-3"><a href="" class="p-2 px-3" style="border-radius: 15px; background-color: lightblue;"><i class="fas fa-shield"></i> Verify Now</a></h6>
+                {% endif %}
+            </div>
+            <span class="fs-5">{{chef.specialities}}</span><br />
+            <span>{{chef.city}}, {{chef.state}}, Nigeria</span> <span class="fs-3">.</span>
+            <a class="ms-1" type="button" onclick="showContact()">Contact Info</a>
+            <div class="contact hidden">
+                <span>{{chef.customer_deets.email}}</span> <span class="fs-3">.</span>
+                <span>{{chef.phone}}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="card col-lg-10 mx-auto">
+        <div class="card-body">
+            <div class="d-flex align-items-center">
+                <h5 class="card-title">Social Fields</h5>
+                <h6 class="ms-auto">
+                    <a type="button" data-bs-toggle="modal" data-bs-target="#postModal" class="p-2 px-3" style="border-radius: 15px; background-color: lightblue;">Create social post</a>
+                </h6>
+            </div>
+            {% if posts %}
+            <p class="card-text">You have {{number_of_posts}} posts available.</p>
+            <a href="{{url_for('chef_timeline')}}" class="btn btn-primary">My Posts</a>
+            {% else %}
+            <span class="card-text">You haven't made any post yet.</span><br />
+            <span class="card-text">You can view your posts from here.</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card col-lg-10 mx-auto">
+        <div class="card-body">
+            <div class="d-flex align-items-center">
+                <h5 class="card-title">Create Products</h5>
+                <h6 class="ms-auto">
+                    <a  type="button" href="{{url_for('chef_create_product')}}" class="p-2 px-3" style="border-radius: 15px; background-color: lightblue;">Create Product</a>
+                </h6>
+            </div>
+            {% if products %}
+            <p class="card-text">You have {{number_of_products}} {% if number_of_products > 1 %}products{% else %}product{% endif %} available.</p>
+            <a href="{{url_for('chef_product')}}" class="btn btn-primary">My Products</a>
+            {% else %}
+            <span class="card-text">You haven't created any products yet.</span><br />
+            <span class="card-text">You can view your products from here.</span>
+            {% endif %}
+        </div>
+    </div>
+</form>
+
+  <div class="modal fade" id="postModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h6 class="modal-title" id="exampleModalLabel">
+            <div class="d-flex align-items-center pt-2">
+                <img 
+                    src="/static/photos/{{chef.customer_deets.dp}}" 
+                    class="img-source" 
+                    alt="Profile Image" 
+                    width="50" height="50" style="border-radius: 50%"
+                />
+                <span class="ms-2 fs-5">{{ chef.customer_deets.firstname }} {{ chef.customer_deets.lastname }}</span>
+            </div>
+          </h6>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            <form action="{{url_for('chef_make_post')}}" method="post" enctype="multipart/form-data" id="forms" class="shadow py-4">
+                <input type="hidden" name="csrf_token" value="{{csrf_token()}}" />
+                <div class="row justify-content-around">
+                    <div class="col-md-10 col-12">
+                        <div class="d-flex">
+                            <div class="mb-3">
+                                <input type="file" name="mediaFile" id="media-file" style="display:none">
+                                <label for="media-file" class="row" title="Select a picture or a 30 seconds video.">
+                                    <i class="fas fa-photo-film" style="font-size: 3rem"></i> 
+                                    <span style="font-style: italic;">Select a picture or a 30 seconds video.</span>
+                                </label>
+                            </div>
+                            <div class="hidden photo-preview">
+                                <img src="" alt="..." height="100" class="photo">
+                            </div>
+                            <div class="hidden video-preview">
+                                <video controls width="150" height="100" class="video" autoplay muted></video>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="fs-5 d-block" for="title">Title</label>
+                            <input type="text" name="title" id="title" class="form-control noround" placeholder="What do you want to talk about?"/>
+                        </div>
+                        <div class="mb-3">
+                            <label class="fs-5 d-block" for="content">Content</label>
+                            <textarea name="content" id="content" rows="5" class="form-control noround"></textarea>
+                        </div>
+                        <div class="mt-2">
+                            <button type="button" class="btn btn-primary col-md-4 col-12 bnt-lg post-btn noround">POST</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+{% endblock main %}
+
+{% block customJS %}
+<script>
+  
+    function showContact(){
+        $('.contact').toggleClass('hidden');
+    }
+    // Handle making a post
+    function checkFileType(file) {
+        const imageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/jpg', 'image/jfif'];
+        const videoTypes = ['video/mp4', 'video/mkv', 'video/mov', 'video/avi'];
+        
+        if (imageTypes.includes(file.type)) {
+            return 'image';
+        } else if (videoTypes.includes(file.type)) {
+            return 'video';
+        }
+    }
+
+    function readURL(input) {
+        if (input.files) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                $('.photo').attr('src', e.target.result);
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function readVideoURL(input) {
+        if (input.files) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                $('.video').attr('src', e.target.result);
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    const fileInput = document.getElementById('media-file');
+    fileInput.addEventListener('change', function() {
+        const file = fileInput.files[0];
+        const fileType = checkFileType(file);
+        
+        if (fileType === 'image') {          
+            readURL(this);
+            $('.photo-preview').removeClass('hidden');
+            $('.video-preview').addClass('hidden');
+        
+        } else if (fileType === 'video') {
+            readVideoURL(this);
+            $('.video-preview').removeClass('hidden');
+            $('.photo-preview').addClass('hidden');
+        }
+    });
+
+    $('.post-btn').click(function(){
+        const myForm = document.querySelector('#forms');
+        const formData = new FormData(myForm);
+        formData.append("csrf_token", "{{csrf_token()}}");
+
+        $.ajax({
+            url: "/chef-make-post/",
+            type: "POST",
+            processData: false,
+            contentType: false,
+            data: formData,
+            success: function(response){
+                if (response.status == 'success'){
+                    swal({
+                        title: "Completed!",
+                        text: "Your post has been uploaded.",
+                        icon: "success",
+                        buttons: {
+                            confirm: {
+                                text: "OK",
+                                value: true,
+                                visible: true,
+                                className: "btn btn-sm btn-success",
+                                closeModal: true,
+                            },
+                        },
+                    });
+                    window.location.replace('/chef-timeline/');
+                } else if (response.status == 'large_file'){
+                    swal({
+                        text: "Video duration is too large.",
+                        icon: "error",
+                        buttons: {
+                            confirm: {
+                                text: "OK",
+                                value: true,
+                                visible: true,
+                                className: "btn btn-sm btn-danger",
+                                closeModal: true,
+                            },
+                        },
+                    });
+                } else if (response.status == 'not-allowed'){
+                    swal({
+                        text: response.message,
+                        icon: "error",
+                        buttons: {
+                            confirm: {
+                                text: "OK",
+                                value: true,
+                                visible: true,
+                                className: "btn btn-sm btn-danger",
+                                closeModal: true,
+                            }
+                        },
+                    });
+                } else {
+                    swal({
+                        text: "Please complete all data fields!",
+                        icon: "error",
+                        buttons: {
+                            confirm: {
+                                text: "OK",
+                                value: true,
+                                visible: true,
+                                className: "btn btn-sm btn-danger",
+                                closeModal: true,
+                            }
+                        },
+                    });
+                }
+            }
+        })
+    });
+
+</script>
+{% endblock customJS %}

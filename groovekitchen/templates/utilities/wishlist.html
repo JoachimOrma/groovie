@@ -1,0 +1,107 @@
+{% extends "utilities/layout.html" %}
+{% block banner %}
+<div class="container-xxl py-3 bg-dark hero-header mb-3 d-none d-lg-block">
+    <div class="container text-center my-3 pt-3 pb-3">
+        <nav aria-label="breadcrumb">
+
+        </nav>
+    </div>
+</div>
+{% endblock banner %}
+
+{% block main %}
+    <div class="container">
+        {% if wishlist_items %}
+        <div class="row">
+            <div class="col-md-12">
+              <div class="card card-round">
+                <div class="card-header">
+                  <div class="card-head-row card-tools-still-right">
+                    <div class="h3 text-center">My Wishlist</div>
+                  </div>
+                </div>
+                <div class="card-body p-0">
+                  <div class="table-responsive">
+                    <table class="table align-items-center mb-0">
+                      <thead class="thead-light">
+                        <tr>
+                          <th scope="col">#</th>
+                          <th scope="col">Product Image</th>
+                          <th scope="col">Product Name</th>
+                          <th scope="col">Price (NGN)</th>
+                          <th scope="col">Cart</th>
+                          <th scope="col">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for item in wishlist_items %}
+                        <tr>
+                            <td>{{loop.index}}</td>
+                            <td>
+                                {% set images = item.product_deets.image.split('*') %}
+                                {% if images | length > 0 %}
+                                <img src="/static/products/{{images[0]}}" alt="..." width="50" height="30">
+                                {% endif %}
+                            </td>
+                            <td>{{item.product_deets.name}}</td>
+                            <td>{{item.product_deets.price}}</td>
+                            <td>
+                                <a type="button" href="#" class="add-to-cart" title="Add product to cart" style="font-size: small"><i class="fas fa-shopping-cart text-success"></i> <span class="d-none d-md-inline-block">Cart</span></a>
+                                <input type="hidden" name="cartItem" value="{{item.product_deets.id}}" class="cart-item" />
+                            </td>
+                            <td><a href="{{url_for('delete_wishlist', wid=item.id)}}" title="Remove product from wishlist" style="font-size: small"><i class="fas fa-trash text-danger"></i> <span class="d-none d-md-inline-block">Remove</span></a></td>
+                        </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        {% else %}  
+        <div class="d-flex justify-content-center fs-5">
+            <p>You have no item on your wishlist.</p>
+        </div>
+        {% endif %}
+    </div>
+{% endblock main %}
+
+{% block footer %}
+{% endblock footer %}
+
+{% block customJS %}
+<script>
+  // Add products to cart
+  document.addEventListener('DOMContentLoaded', function() {
+    const addToCart = document.querySelectorAll('.add-to-cart');   
+    addToCart.forEach(link => {
+        link.addEventListener('click', function(event) {
+            event.preventDefault();
+            const cartItemInput = link.nextElementSibling;
+
+            if (cartItemInput && cartItemInput.classList.contains('cart-item')) {
+                const cart_id = cartItemInput.value;
+                $.ajax({
+                    url: `/add-to-cart/${cart_id}/`,
+                    type: "POST",
+                    data: {"csrf_token": "{{csrf_token()}}"},
+                    success: function(response){
+                        if (response.status == 'success'){
+                            swal({
+                                text: "Item added to cart",
+                                icon: "success",
+                                buttons: false,
+                                timer: 2000,
+                            });
+                            $('.cart_items_count').text(response.number_of_cart_items);
+                        }
+                    }
+                })
+            }
+        })
+    })
+})
+
+</script>
+{% endblock customJS %}

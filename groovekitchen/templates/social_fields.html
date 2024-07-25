@@ -1,0 +1,320 @@
+{% extends 'utilities/layout.html' %}
+{% block hero %}{% endblock hero %}
+
+{% block main %}
+    <div class="container-xxl pb-2">
+        <div class="container">
+            <div class="row g-5 align-items-center justify-content-center">                        
+                <div class="col-lg-6 col-md-8 col-12 text-dark mb-5">
+                    {% if posts %}
+                    {% for post in posts %}
+                    <div class="px-3 pb-2 mb-4 shadow post">
+                        <div class="d-flex align-items-center pt-2 mt-3">
+                            <img 
+                                src="/static/photos/{{post.customer_deets.dp}}" 
+                                class="img-source" 
+                                alt="Profile Image" 
+                                width="50" height="50" style="border-radius: 50%"
+                            />
+                            <div class="d-flex flex-column">
+                                <span class="ms-2 fs-5">{{ post.customer_deets.firstname }} {{ post.customer_deets.lastname }}</span>
+                                <span class="ms-2" style="font-style: italic; font-size: small">{{ post.date_posted.strftime("%a, %B %d, %Y") }}</span>
+                            </div>
+                        </div>
+                        <h5 class="mt-1">{{post.title}}</h5>
+                        <div style="position: relative; overflow: hidden;" class="content-box">
+                            {% if post['content'] | length > 200 %}
+                            {% set last_space = post.content[:125].rfind(' ') %}
+                            <p class="pb-2 excerpt">
+                                {{ post['content'][:last_space] }}... <span type="button" class="text-primary read-more" style="cursor: pointer;">see more</span>
+                                <input type="hidden" name="postId" value="{{post.id}}" class="postID">
+                            </p>
+                            {% else %}
+                                {% for paragraph in post.content.split('\n') %}
+                                <p>{{paragraph}}</p>
+                                {% endfor %}
+                            {% endif %}
+                            <div class="full-text hidden pb-2">
+                                {% for paragraph in post.content.split('\n') %}
+                                <p>{{paragraph}}</p>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% if post.file_type == 'image' %}
+                            <div class="mb-2 text-center">
+                                <img src="/static/media/{{ post.file }}" alt="{{ post.title }}" class="w-80 img-fluid" height="300" />
+                            </div>
+                        {% else %}
+                            <video src="/static/media/{{ post.file }}" class="w-100" height="250" controls autoplay muted></video>
+                        {% endif %}
+            
+                        <div class="d-flex justify-content-between">
+                            <span>
+                                <i class="fa-solid fa-thumbs-up"></i>
+                                {% if likes|length > 0 %}
+                                    {% set number_of_likes = likes|selectattr("postid", "==", post.id)|list|length %}
+                                    <span id="number-of-likes-{{post.id}}">{{number_of_likes}}</span>
+                                {% endif %}
+                            </span>
+                            <span>
+                                {% if comments|length > 0 %}
+                                    {% set number_of_comments = comments|selectattr("postid", "==", post.id)|list|length %}
+                                    <span id="number-of-comments-{{ post.id }}">{{ number_of_comments }}</span>
+                                {% endif %}                              
+                                <i class="fas fa-comment"></i>
+                            </span>
+                        </div>
+                        <hr />
+                        <div class="d-flex align-items-center justify-content-evenly text-primary">
+                            <form action="" method="post">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                {% if session.get('useronline') != None %}
+                                    {% if customer_on_list.postid == post.id %}
+                                        <div class="d-flex align-items-center py-2 px-3 likeBtn" id="like-{{post.id}}">
+                                            <a type="button" class="like-btn">   
+                                                <i class="fa-solid fa-thumbs-up likeIcon" style="font-size: 1.4rem;"></i>                                        
+                                                <span class="text-dark ms-2 d-none d-md-inline-block">Liked</span>
+                                            </a>
+                                            <input type="hidden" name="postId" class="postID" value="{{ post.id }}">
+                                            <input type="hidden" name="customerId" class="customerID" value="{{session.get('useronline')}}">
+                                        </div>
+                                    {% else %}
+                                        <div class="d-flex align-items-center py-2 px-3 likeBtn" id="like-{{post.id}}">
+                                            <a type="button" class="like-btn">   
+                                                <i class="fa-regular fa-thumbs-up likeIcon" style="font-size: 1.4rem;"></i>                                        
+                                                <span class="text-dark ms-2 d-none d-md-inline-block">Like</span>
+                                            </a>
+                                            <input type="hidden" name="postId" class="postID" value="{{ post.id }}">
+                                            <input type="hidden" name="customerId" class="customerID" value="{{session.get('useronline')}}">
+                                        </div>
+                                    {% endif %}
+                                {% else %}
+                                <div class="d-flex align-items-center py-2 px-3 likeBtn" id="like-{{post.id}}">
+                                    <a type="button" data-bs-target="#loginModal" data-bs-toggle="modal">   
+                                        <i class="fa-regular fa-thumbs-up likeIcon" style="font-size: 1.4rem;"></i>                                        
+                                        <span class="text-dark ms-2 d-none d-md-inline-block">Like</span>
+                                    </a>
+                                </div>
+                                {% endif %}
+
+                                
+                            </form>
+                            <a type="button" class="d-flex align-content-center justify-content-center py-2 px-3 comment-button" data-bs-toggle="modal" data-bs-target="#comment-box-{{post.id}}">
+                                <i class="fas fa-comment" style="font-size: 1.3rem;"></i>
+                                <span class="text-dark ms-2">Caption this </span>
+                            </a>
+                            <div class="btn-group dropend d-flex align-items-center">
+                                <a type="button" class="btn btn-primary btn-sm dropdown-toggle d-flex align-items-center justify-content-center" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fas fa-share" style="font-size: 0.8rem;"></i>
+                                    <span class="text-dark ms-2 d-none d-md-block">Share</span>
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" type="button" onclick="window.location.href='whatsapp://send?https://groovekitchen.com';">Share to whatsApp</a></li>
+                                    <li><a class="dropdown-item" type="button" onclick="window.open('https://www.facebook.com/sharer/sharer.php?u=https://groovekitchen.com', '_blank');">Share to facebook</a></li>
+                                </ul>
+                              </div>
+                        </div>
+                        <hr />
+            
+                        <div class="modal fade comment-box" id="comment-box-{{post.id}}" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content rounded-0">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="bookingLabel">Captions</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div style="overflow: auto;">
+                                            <div id="comments-container-{{post.id}}" class="d-flex flex-column" style="min-height:200px; max-height: 400px">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <form method="post" action="{{url_for('add_comment')}}" class="position-relative d-flex align-items-center" style="width: 100%;">
+                                            <input class="form-control py-3 ps-4 pe-5 flex-grow-1" type="text" id="commentID" name="comment" placeholder="Leave a comment" style="border-radius: 25px;" />
+                                            {% if session.get('useronline') != None %}
+                                            <a type="submit" class="btn text-primary py-2 position-absolute top-0 end-0 mt-2 me-2 send-btn">
+                                                <i class="fa-solid fa-paper-plane" style="font-size: 1.5rem"></i>
+                                            </a>
+                                            {% else %}
+                                            <a type="button" class="btn text-primary py-2 position-absolute top-0 end-0 mt-2 me-2" data-bs-target="#loginModal" data-bs-toggle="modal">
+                                                <i class="fa-solid fa-paper-plane" style="font-size: 1.5rem"></i>
+                                            </a>
+                                           {% endif %}
+                                            <input class="postID" type="hidden" name="postid" value="{{post.id}}">
+                                            <input class="customerID" type="hidden" name="customerid" value="{{session.get('useronline')}}">
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>    
+                    {% endfor %}
+                    {% else %}
+                    <div class="d-flex justify-content-center" style="height: 320px; margin-top: 100px">
+                        <h3>No social posts found.</h3>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock main %}
+{% block customJS %}
+<script>
+    $(document).ready(function() {
+
+        // Handling read more button
+        document.querySelectorAll('.read-more').forEach(button => {
+            button.addEventListener('click', (event) => {
+                event.preventDefault();
+                const contentBox = event.target.closest('.content-box');
+                const postId = contentBox.querySelector('.postID').value;
+                const fullText = contentBox.querySelector('.full-text');
+                const excerptText = contentBox.querySelector('.excerpt');
+                fullText.classList.remove('hidden');
+                excerptText.classList.add('hidden');
+            });
+        });
+        
+        //Handling like and unlike
+        document.querySelectorAll('.like-btn').forEach(btn => {
+            btn.addEventListener('click', (event) => {
+                event.preventDefault();
+                const form = event.target.closest('form');
+                const postId = form.querySelector('.postID').value;
+                const customerId = form.querySelector('.customerID').value;
+                const csrfToken = form.querySelector('[name="csrf_token"]').value;  
+                const icon = form.querySelector('.likeIcon');
+                const isRegular = icon.classList.contains('fa-regular');
+
+                $.ajax({
+                    url: '/like-post/',
+                    type: 'POST',
+                    data: {
+                        "csrf_token": csrfToken,
+                        "postId": postId,
+                        "customerId": customerId,
+                    },
+                    success: function(response){
+                        if (response.status === 'success') {
+
+                            if (isRegular && response.customer_online != response.customer_on_list){
+                                icon.classList.add('fa-solid');
+                                icon.classList.remove('fa-regular');
+                            }else{
+                                icon.classList.add('fa-regular');
+                                icon.classList.remove('fa-solid');
+                            }
+                            $(`#number-of-likes-${postId}`).text(response.number_of_likes);                            
+                        }
+                    } 
+                });
+                
+            });
+        });
+
+        // Function to fetch and display the comments
+        function fetchAndDisplayComments(postId) {
+            $.ajax({
+            url: '/comments/' + postId + '/',
+            type: 'GET',
+            dataType: 'json',
+            success: function(response) {
+                if (response.status === 'success') {
+                let commentHtml = '';
+                // Clear the existing comments
+                $('#comments-container-' + postId).empty();
+                
+                // Append the new comments
+                response.comments.forEach(comment => {
+                    const dp = comment.dp || 'avatar.png';
+                    commentHtml += `
+                        <div class="d-flex">
+                            <img src='/static/photos/${dp}' alt="..." width="50" height="50" style="border-radius: 50%;" />
+                            <p class="d-flex flex-column bg-info p-2 ms-2" style="border-radius: 10px; font-size: small;">
+                                <span class="fw-semi-bold">${comment.firstname} ${comment.lastname}</span>
+                                <span>${comment.content}</span>
+                            </p>
+                        </div>
+                    `;
+                    
+                });
+                $("#comments-container-" + postId).append(commentHtml);
+
+                // Display the number of comments
+                $("#number-of-comments-" + postId).text(response.number_of_comments);
+                } else {
+                // Handle error case
+                $('#comments-container').html('<p>No comments found.</p>');
+                $('#number-of-comments').text('0 comments');
+                }
+            },
+            error: function(xhr, status, error) {
+                // Handle AJAX error
+                $('#comments-container').html('<p>Error fetching comments.</p>');
+                $('#number-of-comments').text('0 comments');
+            }
+            });
+        }
+        
+        // Toggle the comment box when the comment button is clicked
+        $(".comment-button").click(function(event) {
+            event.preventDefault();
+            const postId = $(this).closest(".post").find(".postID").val();
+            $("#comment-box-" + postId).toggleClass("hidden");
+            fetchAndDisplayComments(postId);
+        });
+        
+        // Close the comment box when the close button is clicked
+        $(".close-button").click(function(event) {
+            event.preventDefault();
+            $(this).closest(".comment-box").addClass("hidden");
+        });   
+        
+        // Handle the submission of the comment by send button
+        $(".send-btn").click(function(e) {
+            e.preventDefault();
+            const commentInput = $(this).closest(".modal-footer").find("#commentID");
+            const postId = $(this).closest(".modal-footer").find(".postID").val();
+            const customerId = $(this).closest(".modal-footer").find(".customerID").val();
+        
+            if (commentInput){
+                $.ajax({
+                    url: "{{ url_for('add_comment') }}",
+                    type: "POST",
+                    data: {
+                        "comment": commentInput.val(),
+                        "postid": postId,
+                        "customerid": customerId,
+                        "csrf_token": "{{ csrf_token() }}"
+                    },
+                    success: function(response) {
+                        // Update the comments container with the new comment
+                        const dp = response.comments.dp || 'avatar.png';
+                        const firstname = response.comments.firstname;
+                        const lastname = response.comments.lastname;
+                        const content = response.comments.content;
+                        commentHtml = `
+                        <div class="d-flex">
+                            <img src='/static/photos/${dp}' alt="..." width="50" height="50" style="border-radius: 50%;" />
+                            <p class="d-flex flex-column bg-info p-2 ms-2" style="border-radius: 10px; font-size: small;">
+                                <span class="fw-semi-bold">${firstname} ${lastname}</span>
+                                <span>${content}</span>
+                                </p>
+                                </div>
+                        `;
+                        
+                        $("#number-of-comments-" + postId).text(response.number_of_comments);
+                        $("#comments-container-" + postId).append(commentHtml);
+                        commentInput.val("");
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Error adding comment: " + error);
+                    }
+                });
+            }
+        });
+    });
+</script>
+{% endblock customJS %}

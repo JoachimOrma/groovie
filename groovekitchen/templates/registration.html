@@ -1,0 +1,137 @@
+{% extends 'index.html' %}
+
+{% block main %}
+
+<div class="container-xxl position-relative p-0">
+    <div class="container-xxl pb-5 bg-dark hero-header" style="height: 100vh">
+        <div class="container text-center pt-4 pb-3">
+            <h6 class="display-6 text-white animated slideInRight">
+               <i class="fa fa-home text-primary" style="cursor: pointer" onclick="goBackToHome();"></i> Create an Account.
+            </h6>
+        </div>
+        <div class="row pb-5 justify-content-center align-items-center">
+            <div class="col-lg-6 col-12 pt-3" style="border: 1px solid #777">
+
+                <form action="{{url_for('registration')}}" method="post">
+                    <input type="hidden" name="csrf_token" value="{{csrf_token()}}" />
+                     <div class="row">
+                         <div class="col-md-6">
+                             <div class="form-floating mb-3">
+                                {{form.firstname(class='form-control noround', placeholder='Your Firstname')}}
+                                {{form.firstname.label}}
+                            </div>
+                         </div>
+                         <div class="col-md-6">
+                             <div class="form-floating mb-3">
+                                {{form.lastname(class='form-control noround', placeholder='Your Lastname')}}
+                                {{form.lastname.label}}
+                            </div>
+                         </div>
+                     </div>
+                    <div class="form-floating mb-3">
+                        {{form.email(class='form-control noround', placeholder='Your Email')}}
+                        {{form.email.label}}
+
+                        <p class="email_taken mt-1"> </p>
+                    </div>
+                    <div class="form-floating mb-3">
+                        {{form.password(class='form-control noround', placeholder='Choose Password')}}
+                        {{form.password.label}}
+
+                        <p class="short_password mt-1"> </p>
+                    </div>
+                    <button type="button" class="btn btn-primary col-12 btn-lg noround" onclick="handleRegistration();">Submit</button>
+                    <hr />
+                    <div class="d-flex justify-content-between flex-wrap">
+                        <p class="text-light">Already have an account? <a href="{{url_for('login')}}" class="text-primary">Login.</a></p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock main %}
+{% block customJS %}
+<script>
+    function handleRegistration() {
+        const firstname = $('#firstname').val();
+        const lastname = $('#lastname').val();
+        const email = $('#email').val();
+        const password = $('#password').val();
+    
+        if (firstname && lastname && email && password){
+            $.ajax({
+                url: "/registration/",
+                type: "POST",
+                data: {
+                    "firstname": firstname,
+                    "lastname": lastname,
+                    "email": email,
+                    "password": password,
+                    "csrf_token": "{{csrf_token()}}",
+                },
+                success: function(response){
+                    if (response.status == 'email_taken'){
+                        $('.email_taken').text("Email address has been taken.").addClass('text-danger');
+                    }
+                    else if (response.status == 'short_password'){
+                        $('.short_password').text("Password must be 8 characters or more.").addClass('text-danger');
+                    }
+                    else {
+                        $('.password_short').text('');
+                        $('.email_taken').text('');
+                        swal({
+                            title: "Congratulations!",
+                            text: "Your Registration Was Successful.",
+                            icon: "success",
+                            buttons: {
+                                confirm: {
+                                    text: "OK",
+                                    value: true,
+                                    visible: true,
+                                    className: "btn btn-success",
+                                    closeModal: true,
+                                },
+                            },
+                        });
+
+                        function redirectToLogin() {
+                            window.location.replace('/login/');
+                        };
+                        const timer = setTimeout(redirectToLogin, 3000);
+                    }
+                }
+            })
+        }
+        else {
+            swal({
+                text: "Please complete all data fields!",
+                icon: "error",
+                buttons: {
+                    confirm: {
+                        text: "OK",
+                        value: true,
+                        visible: true,
+                        className: "btn btn-danger",
+                        closeModal: true,
+                    },
+                },
+            });
+        }
+    }
+    $('#password').keypress(function(){
+        const password = $('#password').val();
+        if (password.length < 8){
+            $('.short_password').text("Password must be 8 characters or more").addClass('text-danger');
+        } else {
+            $('.short_password').removeClass('text-danger');
+            $('.short_password').text('Password is looking great').addClass('text-success');
+        }
+    });
+
+    function goBackToHome(){
+        window.location.replace('/');
+    }
+</script>
+{% endblock customJS %}

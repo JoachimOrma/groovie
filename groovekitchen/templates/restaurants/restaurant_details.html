@@ -1,0 +1,48 @@
+{% extends "utilities/layout.html" %}
+{% block banner %}
+<div class="container-xxl py-3 bg-dark hero-header mb-3 d-none d-lg-block">
+    <div class="container text-center my-3 pt-3 pb-3">
+        <nav aria-label="breadcrumb">
+        </nav>
+    </div>
+</div>
+{% endblock banner %}
+
+{% block main %}
+   <div class="container">
+    <div class="row justify-content-center">
+        <div class="col text-center py-2 shadow">
+            <h3>Restaurant Details</h3>
+        </div>
+    </div>
+     <div class="row py-4 shadow">
+            <div class="col-lg-7 vstack">
+                <img src="/static/images/download1.jpg" alt="..." height="200"/>
+                <div class="mt-5">
+                    <h6><i class="fa fa-circle-check"></i> Reservation Options</h6>
+                </div>
+            </div>
+            <div class="col-lg-5">
+                <h5><i class="fa fa-city"></i> House of El</h5>
+                <h6><i class="fa fa-location-dot"></i> Lekki, Lagos State</h6>
+                <p class="text-justified my-3">Lorem ipsum dolor sit amet consectetur adipisicing elit. Corrupti veniam exercitationem error,
+                    eum, unde quibusdam autem, dolorum obcaecati mollitia omnis sunt.
+                    Ad rem blanditiis eum corporis recusandae. Omnis, laudantium tempore?
+                </p>
+                <div class="my-3 d-flex flex-column">
+                    <h6><i class="fa fa-clock"></i> Opening Hours</h6>
+                    <span>Mondays - Fridays : 8:00am - 11:59pm</span>
+                    <span>Saturdays : 8:00am - 10:00pm</span>
+                    <span>Sundays : 10:00am - 10:59pm</span>
+                </div>
+                <p>Share with your friends.</p>
+                <a href="#" class="share-it pe-3 py-2"> <i class="fab fa-facebook text-primary"></i> Share</a>
+                <a href="#" class="share-it pe-3 py-2"> <i class="fab fa-twitter"></i> Share</a>
+                <a href="#" class="pin-it py-2 pe-3"> <i class="fab fa-pinterest text-danger"></i> Pin it</a>
+            </div>
+        </div>
+   </div>
+{% endblock main %}
+
+{% block footer %}
+{% endblock footer %}

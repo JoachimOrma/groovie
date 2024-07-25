@@ -1,0 +1,187 @@
+{% extends 'utilities/layout.html' %}
+{% block search %}
+    
+{% endblock search %}
+{% block main %}
+
+<div class="container" style="min-height: 420px">
+    <form action="{{url_for('search_result')}}" method="post" class="mb-5">
+        <input type="hidden" name="csrf_token" value="{{csrf_token()}}" />
+        <div class="position-relative" style="max-width: 600px; margin: 0px 0px">
+            <input class="form-control border-primary w-100 py-3 ps-4 pe-5" type="text" name="searchInput" id="search-box" placeholder="What would you like to eat?" required />
+            <button type="button" class="btn btn-primary py-2 position-absolute top-0 end-0 mt-2 me-2 search-button">Search</button>
+        </div>
+    </form>
+
+    <div class="row g-4 justify-content-center justify-content-md-start mx-2 mx-lg-0" id="meal-container">
+        
+    </div>
+</div>
+
+{% endblock main %}
+{% block customJS %}
+<script>
+    
+    //Handling searching for meals
+    $('.search-button').click(function(){
+        const searchInput = $('#search-box').val();
+        $.ajax({
+            url: "/search-result/",
+            type: "POST",
+            data: {"csrf_token": "{{csrf_token()}}", "searchInput": searchInput},
+            success: function(response){
+                if (response.status === 'success'){
+                    let mealHtml = '';
+                    $('#meal-container').empty();
+                    response.product_list.forEach(meal => {
+                        const images = meal.image.split('*');
+                        mealHtml += `
+                            <div class="col-xl-3 col-lg-4 col-md-6 col-12 wow fadeInUp" data-wow-delay="0.1s">
+                                <div class="product-item"> 
+                                
+                                    <div class="position-relative bg-light overflow-hidden">
+                                        <img class="w-100" src="/static/products/${images[0]}" alt="..." height="170" title="Click image to view product details">
+                                        <input type="hidden" name="cartItem" class="cartItem" value="${meal.id}">
+                                    </div>
+                                    
+                                    <div class="text-center p-2">
+                                        <a class="d-block h6 mb-2" href="">${meal.name}</a>
+                                        <span class="text-primary me-1">N${meal.price}</span>                                                            
+                                    </div>
+                                    <div class="d-flex">
+                                        <small class="w-50 text-center py-2 border">
+                                            <a type="button" class="text-body add-to-cart"><i class="fa fa-shopping-bag text-primary me-2"></i>Add to cart</a>
+                                            <input type="hidden" name="cartItem" class="cartItem" value="${meal.id}">
+                                            </small>
+                                            <small class="w-50 text-center py-2 border">
+                                                <a type="button" class="text-body product-details"><i class="fa fa-eye text-primary me-2"></i>View Details</a>
+                                                <input type="hidden" name="cartItem" class="cartItem" value="${meal.id}">
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        
+                    });
+                    $("#meal-container").append(mealHtml);
+
+                } else if (response.status === 'not-found'){
+                    $('#meal-container').html('<p class="d-flex justify-content-center">No matching meals found.</p>');
+                }
+            },
+            error: function(error){
+                $('#meal-container').html('<p class="d-flex justify-content-center">Something went wrong. Please, try again.</p>');
+            }
+        })
+    })
+
+    //Fetching and displaying meals based on the search on the index page
+    document.body.onload = function(){
+        const searchInput = "{{searchInput}}"
+        $.post({
+            url: `/search-result/`,
+            data: {"csrf_token": "{{csrf_token()}}", "searchInput": searchInput},
+            success: function(response) {
+                if (response.status === 'success') {
+                    let mealHtml = '';
+                    $('#meal-container').empty();
+                    response.product_list.forEach(meal => {
+                        const images = meal.image.split('*');
+                        mealHtml += `
+                            <div class="col-xl-3 col-lg-4 col-md-6 col-12 wow fadeInUp" data-wow-delay="0.1s">
+                                <div class="product-item"> 
+                                
+                                    <div class="position-relative bg-light overflow-hidden">
+                                        <img class="w-100" src="/static/products/${images[0]}" alt="..." height="170" title="Click image to view product details">
+                                        <input type="hidden" name="cartItem" class="cartItem" value="${meal.id}">
+                                    </div>
+                                    
+                                    <div class="text-center p-2">
+                                        <a class="d-block h6 mb-2" href="">${meal.name}</a>
+                                        <span class="text-primary me-1">N${meal.price}</span>                                                            
+                                    </div>
+                                    <div class="d-flex">
+                                        <small class="w-50 text-center py-2 border">
+                                            <a type="button" class="text-body add-to-cart"><i class="fa fa-shopping-bag text-primary me-2"></i>Add to cart</a>
+                                            <input type="hidden" name="cartItem" class="cartItem" value="${meal.id}">
+                                            </small>
+                                            <small class="w-50 text-center py-2 border">
+                                                <a type="button" class="text-body product-details"><i class="fa fa-eye text-primary me-2"></i>View Details</a>
+                                                <input type="hidden" name="cartItem" class="cartItem" value="${meal.id}">
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    $("#meal-container").append(mealHtml);
+
+                } else if (response.status === 'not-found'){
+                    $('#meal-container').html('<p class="d-flex justify-content-center">No matching meals found.</p>');
+                }         
+            },
+            error: function(error) {
+                $('#meal-container').html('<p class="d-flex justify-content-center">Something went wrong. Please, try again.</p>');
+            }
+        });
+    }
+
+     // Add products to cart
+    document.addEventListener('DOMContentLoaded', function() {
+        const addToCartButtons = document.querySelectorAll('.add-to-cart');
+      
+        addToCartButtons.forEach(button => {
+          button.addEventListener('click', function(event) {
+            event.preventDefault(); 
+            const cartItemInput = button.nextElementSibling;
+      
+            if (cartItemInput && cartItemInput.classList.contains('cartItem')) {
+              const cart_id = cartItemInput.value;
+      
+              $.ajax({
+                url: `/add-to-cart/${cart_id}/`,
+                type: 'POST',
+                data: { csrf_token: '{{csrf_token()}}' }, 
+                success: function(response) {
+                  if (response.status === 'success') {
+                    // Show a success message (you can customize this further)
+                    swal({
+                      text: 'Item added to cart',
+                      icon: 'success',
+                      buttons: false,
+                      timer: 2000,
+                    });
+                  }
+                },
+              });
+            }
+          });
+        });
+    });
+      
+
+    //View Product Details
+    document.addEventListener('DOMContentLoaded', function() {
+        const addToCart = document.querySelectorAll('.product-details');   
+        addToCart.forEach(link => {
+            link.addEventListener('click', function(event) {
+                event.preventDefault();
+                const cartItemInput = link.nextElementSibling;
+                
+                if (cartItemInput && cartItemInput.classList.contains('cartItem')) {
+                    const cart_id = cartItemInput.value;
+                    $.ajax({
+                        url: `/product-details/${cart_id}/`,
+                        type: "POST",
+                        data: {"csrf_token": "{{csrf_token()}}"},
+                        success: function(response){
+                            window.location.href=`/product-details/${cart_id}/`
+                        }
+                    })
+                }
+            })
+        })
+    })
+</script>
+
+{% endblock customJS %}

@@ -1,0 +1,34 @@
+{% extends 'utilities/layout.html' %}
+{% block main %}
+
+    <h2 class="text-center py-3 mb-5 bg-light">Discover the best brands of restaurants.</h2>
+    <div class="tab-content">
+        <div id="tab-1" class="tab-pane fade show p-0 active">
+            <div class="row g-4">
+                {% for restaurant in restaurants %}
+                    <div class="col-xl-3 col-lg-4 col-md-6 wow fadeInUp card-col" data-wow-delay="0.1s">
+                        <div class="card">
+                            <img src="../static/images/{{ restaurant.image }}" alt="..." height="180" style="object-fit: cover;" class="br-15">
+                            <div class="card-body my-2 p-0">
+                                <p class="card-title my-2 text-center" >{{ restaurant.name }} </p>
+                                <span class="border-0 me-2" style="position: absolute; bottom: 5px; right: 0px">
+                                    <small><i class="fa-solid fa-star text-warning"></i> {{ restaurant.rating }}</small>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+{% endblock main %}
+{% block customJS %}
+<script>
+      $(document).ready(function(){
+        $('.card-col').on('click', 'div', function(){
+            window.location.replace("/restaurant-details/");
+        });
+      });
+</script>
+{% endblock customJS %}

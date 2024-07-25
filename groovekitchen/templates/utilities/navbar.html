@@ -1,0 +1,77 @@
+ <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-4 px-lg-5 py-3 py-lg-0">
+    <a href="{{url_for('home')}}" class="navbar-brand p-0 me-2">
+        <h4 class="text-primary m-0"><i class="fa fa-utensils"></i> Groove Kitchen | </h4>
+        <!-- <img src="img/logo.png" alt="Logo"> -->
+    </a>
+    <a href="{{url_for('cart_details')}}" class="nav-item nav-link d-md-none" style="position:relative;">
+        <i class="fas fa-shopping-cart text-light" style="font-size: 1.5rem"></i>
+        <span style="position: absolute; right: 8px; font-size: small; border-radius: 10px" class="text-light px-2 cart_items_count bg-primary">{{number_of_cart_items}}</span>
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
+        <span class="fa fa-bars"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarCollapse">
+        <div class="navbar-nav me-auto">
+            <a href="{{url_for('home')}}" class="nav-item nav-link {% if page=='home' %}active{% endif %}">Home</a>
+            {% if session.get('useronline') and customer.customer_type == 'chef' %}
+            <a href="{{url_for('chef_dashboard')}}" class="nav-item nav-link">Dashboard</a>
+            {% elif session.get('useronline') and customer.customer_type == 'caterer' %}
+            <a href="{{url_for('caterer_dashboard')}}" class="nav-item nav-link">Dashboard</a>
+            {% elif session.get('useronline') and customer.customer_type == 'agent' %}
+            <a href="{{url_for('community_agent_dashboard')}}" class="nav-item nav-link">Dashboard</a>
+            {% endif %}
+        </div>
+        <div class="navbar-nav py-0 pe-4">
+            <a href="{{url_for('social_fields')}}" class="nav-item nav-link {% if page=='social-fields' %} active{% endif %}">Social Fields</a>
+            <div class="nav-item dropdown">
+                <a href="#" class="nav-link dropdown-toggle {% if page=='top_listings' or page=='fast_orders' or page=='restaurants' or page=='private_chefs' or page=='catering' %} active{% endif %}" data-bs-toggle="dropdown">Menu</a>
+                <div class="dropdown-menu m-0">
+                    <a href="{{url_for('fast_orders')}}" class="dropdown-item {% if page=='fast_orders' %} active{% endif %}">Fast Orders</a>
+                    <a href="{{url_for('top_listings')}}" class="dropdown-item {% if page=='top-listing' %} active{% endif %}">Top Listings</a>
+                    <a href="{{url_for('community_agents')}}" class="dropdown-item {% if page=='community_agent' %} active{% endif %}">Community Agents</a>
+                    <a href="{{url_for('professional_chefs')}}" class="dropdown-item {% if page=='professional_chefs' %} active{% endif %}">Chefs</a>
+                    <a href="{{url_for('catering_services')}}" class="dropdown-item {% if page=='catering' %} active{% endif %}">Professional Catering Services</a>
+                    <a href="{{url_for('restaurants')}}" class="dropdown-item {% if page=='restaurants' %} active{% endif %}">Business</a>
+                </div>
+            </div>
+            <a href="{{url_for('about_us')}}" class="nav-item nav-link {% if page=='about_us' %} active{% endif %}">About Us</a>
+            {% if session.get('useronline') != None %}
+                
+                <div class="nav-item dropdown">
+                    <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">Careers</a>
+                    <div class="dropdown-menu m-0">
+                        <a href="{{url_for('community_agent_career')}}" class="dropdown-item">Community Agent</a>
+                        <a href="{{url_for('chef_career')}}" class="dropdown-item">Chef</a>
+                        <a href="{{url_for('caterer_career')}}" class="dropdown-item">Caterer & Event Planner</a>
+                        <a href="#" class="dropdown-item">Business</a>
+                    </div>
+                </div>
+                <div class="nav-item dropdown">
+                    <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown"><i class="far fa-circle-user" style="font-size: 1.4rem;"></i></a>
+                    <div class="dropdown-menu m-0">
+                        <a href="{{url_for('order_history')}}" class="dropdown-item"><i class="fas fa-circle-info"></i> My Orders</a>
+                        <a href="{{url_for('wishlist')}}" class="dropdown-item"><i class="fas fa-heart"></i> My Wishlist <span class="wishlist_count"> {{number_of_wishlist_item}}</span></a>
+                        <a href="{{url_for('payment_history')}}" class="dropdown-item"><i class="fas fa-money-bills"></i> Payment History</a>
+                        <a href="{{url_for('logout')}}" class="dropdown-item text-danger"><i class="fa-solid fa-right-to-bracket"></i> Logout</a>
+                    </div>
+                </div>
+                <a href="{{url_for('cart_details')}}" class="nav-item nav-link d-none d-md-inline-block" style="position:relative;">
+                    <i class="fas fa-shopping-cart" style="font-size: 1.5rem"></i>
+                    <span style="position: absolute; right: -2px; font-size: x-small; border-radius: 10px" class="text-light px-2 cart_items_count bg-primary">{{number_of_cart_items}}</span>
+                </a>
+            {% else %}  
+                <div class="nav-item dropdown">
+                    <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown"><i class="far fa-circle-user" style="font-size: 1.4rem;"></i></a>
+                    <div class="dropdown-menu m-0">
+                        <a href="{{url_for('registration')}}" class="dropdown-item"><i class="fa-solid fa-pen"></i> Register </a>
+                        <a href="{{url_for('login')}}" class="dropdown-item"><i class="fa-solid fa-right-to-bracket"></i> Login</a>
+                    </div>
+                </div>
+                <a href="{{url_for('cart_details')}}" class="nav-item nav-link d-none d-md-inline-block" style="position:relative;">
+                    <i class="fas fa-shopping-cart" style="font-size: 1.5rem"></i>
+                    <span style="position: absolute; right: -2px; font-size: x-small; border-radius: 10px" class="text-light px-2 cart_items_count bg-primary">{{number_of_cart_items}}</span>     
+                </a>
+            {% endif %}    
+        </div>
+    </div>
+</nav>

@@ -1,0 +1,74 @@
+{% extends 'index.html' %}
+
+{% block main %}
+
+<div class="container-xxl position-relative p-0">
+    <div class="container-xxl bg-dark hero-header" style="height: 100vh">
+         <div class="container text-center pt-5 pb-1">
+            <h6 class="display-6 display-md-5 text-light animated slideInRight mt-5">
+                <i class="fa fa-home text-primary" style="cursor: pointer" onclick="goBackToHome();"></i>
+                 Reactivate Account 
+            </h6>
+        </div>
+        <div class="row px-4 px-md-5 pt-2 justify-content-center align-items-center">
+            <div class="col-md-6 py-3" style="border: 1px solid #777">
+                <form action="{{url_for('reactivate_account')}}" method="post" novalidate>
+                <input type="hidden" name="csrf_token" value="{{csrf_token()}}">
+                    <div class="form-floating mb-3">
+                        {{form.email(class='form-control noround', placeholder='Your Registered Email')}}
+                        {{form.email.label}}
+                    </div>
+                    <button type="button" class="btn btn-primary col-12 btn-lg noround" onclick="handleReactivation();">Reactivate</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock main %}
+{% block customJS %}
+<script>
+    function handleReactivation() {
+        const email = $('#email').val();
+        
+        if (email){
+            $.ajax({
+                url: "/reactivate-account/",
+                type: "POST",
+                data: {
+                    "email": email,
+                    "csrf_token": "{{csrf_token()}}"
+                },
+                success: function(response){
+                    if (response.status == 'success'){
+                        swal({
+                            text: "Your account has been reactivated.",
+                            icon: "success",
+                            button: true,
+                            timer: 5000,
+                        })
+                        window.location.replace('/login/');
+                    } else {
+                        swal({
+                            text: "Email doesn't match any record.",
+                            icon: "error",
+                            button: true,
+                        })
+                        $('#email').val('');
+                    }  
+                },
+            });
+        } else {
+            swal({
+                text: "Email field cannot be empty.",
+                icon: "error",
+                button: true,
+            })
+            $('#email').val('');
+        }
+    }
+    function goBackToHome(){
+        window.location.replace('/');
+    }
+</script>
+{% endblock customJS %}
