@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="utf-8">
     <title>Groove Kitchen - {{title}}</title>
@@ -48,15 +47,17 @@
         <!-- Navbar & Hero Start -->
         <div class="container-xxl position-relative p-0">
            {% include 'utilities/navbar.html' %}
-            <div class="container-xxl py-0 py-lg-5 bg-dark hero-header mb-5">
-                <div class="container my-0 my-lg-5 my-3 py-lg-5 py-3">
-                    <div class="row align-items-center g-2 g-lg-5">
+    
+            <div class="container-xxl py-0 py-lg-3 pb-0 bg-dark hero-header mb-2 mb-md-3 mb-lg-5">
+                <div class="container my-0 my-lg-2 py-lg-3 pb-0">
+                    <div class="row align-items-center g-2 g-lg-5" id='before'>
                         <div class="col-lg-6 text-center text-lg-start">
-                            <h1 class="display-5 text-white animated slideInLeft">Fast, Affordable, &<br>Delicious Meal Solution for Busy Lives.</h1>
-                            <p class="text-white animated slideInLeft mb-lg-4 pb-2">The real essence of neighbourhood.</p>
+                            <h1 class="display-6 text-white animated slideInLeft mt-3">Fast, Affordable, &<br>Delicious Meal Solution for Busy Lives.</h1>
+                            <h4 class="text-white animated slideInLeft mb-lg-4 pb-2">The real essence of neighbourhood.</h4>
+
                         </div>
-                        <div class="col-lg-6 text-center text-lg-end overflow-hidden">
-                            <img class="img-fluid" src="/static/img/hero.png" alt="...">
+                        <div class="col-lg-6 text-center text-lg-end overflow-hidden pt-md-5 py-2">
+                            <img class="img-fluid" src="/static/img/hero.png" alt="hero-image">
                         </div>
                     </div>
                 </div>
@@ -65,35 +66,31 @@
         <!-- Navbar & Hero End -->
 
         <!-- Content Start -->
-        <div class="container">
-            <div class="row g-0 gx-2 gx-lg-5 justify-content-between">
-                <div class="col-lg-6">
-                    <div class="section-header text-start mb-lg-5 mb-2 wow fadeInUp" data-wow-delay="0.1s" style="max-width: 500px;">
-                        <h3 class="display-6 mb-3">Top Trending Today</h3>
+        <div class="container" style="min-height: 500px;">
+            <div class="row flex-md-row-reverse g-0 gx-2 gx-lg-5 justify-content-between">
+                <div class="col-md-6 text-start text-lg-end mb-3">
+                    <form action="" method="post">
+                        <div class="position-relative">
+                            <input class="form-control border-primary w-100 py-2 ps-2 pe-5" type="text" name="searchInput" id="search-box" placeholder="What would you like to eat?" required>
+                            <button type="button" class="btn btn-primary btn-sm position-absolute mt-1 top-0 end-0 me-2" id="search-button">Search</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="col-md-5">
+                    <div class="section-header text-start mb-lg-5 mb-2" style="max-width: 500px;">
+                        <h3 class="mb-3">Top Trending</h3>
                     </div>
                 </div>
-                <div class="col-lg-6 col-2 text-start text-lg-end wow slideInRight" data-wow-delay="0.1s">
-                    <ul class="nav nav-pills d-inline-flex justify-content-end mb-5">
-                        <li class="nav-item me-2">
-                            <form action="" method="post">
-                                <input type="hidden" name="csrf_token" value="{{csrf_token()}}" />
-                                <div class="position-relative" style="width: 350px; margin: 0px auto">
-                                    <input class="form-control border-primary w-100 ps-2 pe-5" type="text" name="searchInput" id="search-box" placeholder="What would you like to eat?" required>
-                                    <button type="button" class="btn btn-primary btn-sm position-absolute mt-1 top-0 end-0 me-1" id="search-button">Search</button>
-                                </div>
-                            </form>
-                        </li>
-                    </ul>
-                </div>
             </div>
+        
             <div class="tab-content">
                 <div id="tab-0" class="tab-pane fade show p-0 active">
-                    <div class="row g-4 justify-content-center justify-content-lg-start">
+                    <div class="row g-lg-3 g-2 justify-content-center justify-content-lg-start">
                         {% for item in menu %}
-                            <div class="col-xl-3 col-lg-4 col-md-6 wow fadeInUp mb-5 meal-col" data-wow-delay="0.1s">
+                            <div class="col-xl-2 col-lg-2 col-3 meal-col">
                                 <div class="card meal-card">
                                     <input type="hidden" class="meal-input" name="search_input" value="{{item.name}}" />
-                                    <img src="/static/images/{{ item.image }}" alt="..." height="200" style="object-fit: cover; padding: 1px">
+                                    <img src="/static/images/{{ item.image }}" alt="..." height="80" style="object-fit: cover; padding: 1px">
                                     <div class="footer text-center d-flex flex-column my-2" style="font-size: small;">
                                         <span class="fw-bold" style="font-style: italic; font-size: medium">{{ item.name }} </span>
                                     </div>
@@ -104,13 +101,12 @@
                 </div>
             </div>
         </div>
-
         <!-- Content End -->
 
         {% include 'utilities/footer.html' %}
-
+        
         <!-- Back to Top -->
-        <a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+        <a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="fa fa-arrow-up"></i></a>
         {% endblock main %}
     </div>
 
@@ -143,13 +139,21 @@
              });
         });
 
-
         $('#search-button').click(function(){
             const searchInput = $('#search-box').val();
             if(searchInput){
                 window.location.replace(`/category/${searchInput}/`);
             }
         })
+
+        if (performance.navigation.type === performance.navigation.TYPE_RELOAD) {
+            $('#before').show();
+        };
+        function hideHeroPageOnLoad() {
+            $('#before').hide();
+            $('.search-product').removeClass('hidden');
+        }      
+        setInterval(hideHeroPageOnLoad, 5000);
 
     </script>
 {% endblock customJS %}

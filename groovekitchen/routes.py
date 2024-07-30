@@ -1,7 +1,9 @@
-import requests, os
+import requests, os, random
 # import pathlib
 from secrets import token_hex
 from flask import render_template, request, redirect, url_for, jsonify, session, abort
+from sqlalchemy.orm import joinedload
+from sqlalchemy import or_
 # from google.oauth2 import id_token
 # from google_auth_oauthlib.flow import Flow
 # from pip._vendor import cachecontrol
@@ -17,6 +19,13 @@ from groovekitchen.forms import FormData
 def add_no_cache_header(response):
     response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
     return response
+
+@app.template_filter('pluralize')
+def pluralize(number, singular='', plural='s'):
+    if number == 1:
+        return f"{number} {singular}"
+    else:
+        return f"{number} {plural}"
 
 # app.secret_key = "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"
 # os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
@@ -128,9 +137,9 @@ def home():
         {"id": "beans", "name": 'Beans', "image": 'download18.jpg'},
         {"id": "spaghetti", "name": 'Spaghetti', "image": 'download21.webp'},
         {"id": "noodle", "name": 'Noodle', "image": 'download4.jpg'},
-        {"id": "egusi", "name": 'Egusi Soup', "image": 'download5.jpg'},
+        {"id": "egusi", "name": 'Soup', "image": 'download5.jpg'},
         {"id": "ewedu", "name": 'Ewedu', "image": 'download6.jpg'},
-        {"id": "afan", "name": 'Afan Soup', "image": 'download7.jpg'},
+        {"id": "afan", "name": 'Asian', "image": 'download7.jpg'},
         {"id": "plantain", "name": 'Plantain', "image": 'download8.jpg'},        
     ]
     return render_template('index.html', title="Home", page="home", number_of_cart_items=number_of_cart_items, chefs=chefs, products=products,
@@ -337,35 +346,38 @@ def password_recovery():
 
 @app.route('/fast-orders/', methods=['GET', 'POST'])
 def fast_orders():
-    if session.get('useronline'):
-        cid = session.get('useronline')
-        customer = Customer.query.get_or_404(cid)
-        cart_items = Cart.query.filter_by(customerid=customer.id).all()
-        number_of_cart_items = len(cart_items)
-        wishlist_items = Wishlist.query.filter_by(customerid=customer.id).all()
-        number_of_wishlist_item = len(wishlist_items)
-    else:
-        number_of_cart_items = 0
-        number_of_wishlist_item = 0
-        customer = None
     if request.method == 'POST':
         order_number = request.form.get('searchInput')
-        order = Order.query.filter_by(order_number=order_number).first()
-        if order:
-            order_items = OrderItem.query.filter_by(orderid=order.id).all()
-            item_list = [{
-                "id": item.productid,
-                "name": item.product_deets.name,
-                "quantity": item.quantity,
-                "price": item.price_per_unit,
-                "orderid": order.id,
-            } for item in order_items]
-            return jsonify({"status": "success", "item_list": item_list})
-        else:
-            return jsonify({"status": "error"})
+        if order_number:
+            order = Order.query.filter_by(order_number=order_number).first()
 
-    return render_template('fast_orders.html', title='Fast Orders', page='fast_orders', number_of_cart_items=number_of_cart_items,
-                           number_of_wishlist_item=number_of_wishlist_item, customer=customer)
+            if order:
+                order_items = OrderItem.query.filter_by(orderid=order.id).all()
+                item_list = [{
+                    "id": item.productid,
+                    "name": item.product_deets.name,
+                    "quantity": item.quantity,
+                    "price": item.price_per_unit,
+                    "orderid": order.id,
+                } for item in order_items]
+                return jsonify({"status": "success", "item_list": item_list})
+            else:
+                return jsonify({"status": "not-found"})
+        else:
+            return jsonify({'status': 'error'})
+    else:
+        if session.get('useronline'):
+            cid = session.get('useronline')
+            customer = Customer.query.get_or_404(cid)
+            cart_items = Cart.query.filter_by(customerid=customer.id).all()
+            number_of_cart_items = len(cart_items)
+            wishlist_items = Wishlist.query.filter_by(customerid=customer.id).all()
+            number_of_wishlist_item = len(wishlist_items)
+        else:
+            number_of_cart_items = 0
+            number_of_wishlist_item = 0
+            customer = None
+    return render_template('fast_orders.html', title='Load Order Items', page='fast_orders', number_of_cart_items=number_of_cart_items, number_of_wishlist_item=number_of_wishlist_item, customer=customer)
 
 
 @app.route('/about-us/')
@@ -397,21 +409,63 @@ def about_us():
     return render_template('about.html', title='About Us', page='about_us', services=services, testifiers=testifiers, number_of_cart_items=number_of_cart_items, number_of_wishlist_item=number_of_wishlist_item, customer=customer)
 
 
-@app.route('/top-listing/')
+@app.route('/get-products/')
+def get_products():
+    try:
+        products = Product.query.filter_by(status='1').all()
+        if products:
+            random.shuffle(products)
+            product_list = [
+                {
+                    "id": product.id,
+                    "name": product.name,
+                    "image": product.image,
+                    "price": product.price,
+                } for product in products
+            ]
+            return jsonify({"status": "success", "product_list": product_list})
+        else:
+            return jsonify({"status": "not-found", "message": "No products found."})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route('/top-listing/', methods=['GET', 'POST'])
 def top_listings():
-    if session.get('useronline'):
-        cid = session.get('useronline')
-        customer = Customer.query.get_or_404(cid)
-        cart_items = Cart.query.filter_by(customerid=customer.id).all() or None
-        wishlist_items = Wishlist.query.filter_by(customerid=customer.id).all()
-        number_of_cart_items = len(cart_items) if cart_items else 0
-        number_of_wishlist_item = len(wishlist_items) if wishlist_items else 0
+    if request.method == 'POST':
+        search_input = request.form.get('searchInput')
+        if search_input:
+            random.shuffle(products)
+            products = Product.query.filter(
+                or_(
+                    Product.name.ilike(f'%{search_input}%'),
+                    Product.price.ilike(f'%{search_input}%'),
+                ), Product.status == '1').all()
+            if products:
+                product_list = [{
+                    "id": product.id,
+                    "name": product.name,
+                    "price": product.price,
+                    "image": product.image,
+                } for product in products]
+
+                return jsonify({"status": "success", "product_list": product_list})
+            else:
+                return jsonify({"status": "not-found"})
+        else:
+            return jsonify({"status": "error"})
     else:
-        number_of_cart_items = 0
-        number_of_wishlist_item = 0
-        customer = None
-    products = Product.query.filter(Product.status=='1').all()
-    return render_template('top_listings.html', products=products, title="Top Listing", page='top-listing', customer=customer, number_of_cart_items=number_of_cart_items, number_of_wishlist_item=number_of_wishlist_item)
+        if session.get('useronline'):
+            cid = session.get('useronline')
+            customer = Customer.query.get_or_404(cid)
+            cart_items = Cart.query.filter_by(customerid=customer.id).all() or None
+            wishlist_items = Wishlist.query.filter_by(customerid=customer.id).all()
+            number_of_cart_items = len(cart_items) if cart_items else 0
+            number_of_wishlist_item = len(wishlist_items) if wishlist_items else 0
+        else:
+            number_of_cart_items = 0
+            number_of_wishlist_item = 0
+            customer = None
+    return render_template('top_listings.html', title="Top Listing", page='top-listing', customer=customer, number_of_cart_items=number_of_cart_items, number_of_wishlist_item=number_of_wishlist_item)
 
 
 @app.route('/product-details/<int:pid>/', methods=['GET', 'POST'])
@@ -433,8 +487,8 @@ def product_details(pid):
                         products=products, customer=customer, number_of_wishlist_item=number_of_wishlist_item)
 
 
-@app.route('/social-fields/', methods=['GET', 'POST'])
-def social_fields():
+@app.route('/social-feed/', methods=['GET', 'POST'])
+def social_feed():
     if session.get('useronline'):
         cid = session.get('useronline')
         customer = Customer.query.get_or_404(cid)
@@ -451,7 +505,7 @@ def social_fields():
     posts = Post.query.order_by(Post.date_posted.desc()).all()
     comments = Comment.query.all()
     likes = Like.query.all()
-    return render_template('social_fields.html', title="Social Fields", page='solical-fields', posts=posts, comments=comments, likes=likes, customer_on_list=customer_on_list,
+    return render_template('social_feed.html', title="Social Feed", page='solical-feed', posts=posts, comments=comments, likes=likes, customer_on_list=customer_on_list,
                             customer=customer, number_of_cart_items=number_of_cart_items, number_of_wishlist_item=number_of_wishlist_item)
 
 

@@ -12,7 +12,7 @@
 {% block main %}
     <div class="container">
         <div class="row justify-content-between">
-            <div class="col-lg-8 ps-lg-5 ps-md-3 col-md-6 mx-auto">
+            <div class="col-lg-10 col-md-8 ps-lg-5 ps-md-3 col-8 mx-auto">
                 {% set messages = get_flashed_messages(with_categories=True) %}
                   {% for category, message in messages %}
                     {% if category == 'error' %}
@@ -20,7 +20,7 @@
                     {% endif %}
                   {% endfor %}
                 <div class="printable">
-                    <h2 class="text-center">GROOVIE KITCHEN</h2>
+                    <h2 class="text-center mt-4">GROOVIE KITCHEN</h2>
                     <div class="d-flex flex-column">
                         <span>Customer Name: {{payment_deets.firstname}} {{payment_deets.lastname}} </span>
                         <span>Customer Email: {{payment_deets.email}} </span>
@@ -59,9 +59,9 @@
                     <h6><i class="fa fa-circle-check"></i> Payment information</h6>
                     <span>To complete your order, continue to payment page. You are about to pay a sum of <span class="fw-bold text-dark"> N{{payment_deets.amount}}</span> only.</span>
                 </div>
-                <div class="d-flex flex-lg-row flex-column align-items-center justify-content-md-between">
-                    <button class="btn btn-success btn-lg mb-3 col-12 col-md-5 noround checkout">Continue to payment</button>
-                    <button class="btn btn-danger btn-lg mb-3 col-12 col-md-5 noround" onclick="window.location.replace('/cart-details/')">Cancel</button>
+                <div class="d-flex flex-lg-row flex-column align-items-center align-items-md-start">
+                    <button class="btn btn-success btn-lg mb-3 col-12 col-md-10 noround checkout">Continue to payment</button>
+                    <button class="btn btn-danger btn-lg mb-3 col-12 col-md-10 noround" onclick="window.location.replace('/cart-details/')">Cancel</button>
                 </div>
             </div>
         </div>

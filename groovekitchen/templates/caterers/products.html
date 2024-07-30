@@ -87,8 +87,8 @@
                             </div>
                             <div class="col-12 col-md-6">
                                 <div class="mb-3">
-                                    <label class="fs-5 d-block" for="food_name">Product Name</label>
-                                    <input type="text" name="food_name" id="food_name" class="form-control noround"/>
+                                    <label class="fs-5 d-block" for="product_name">Product Name</label>
+                                    <input type="text" name="product_name" id="product_name" class="form-control noround"/>
                                 </div>
                                     <div class="mb-3">
                                     <label class="fs-5 d-block" for="desc">Description</label>
@@ -179,7 +179,7 @@
         button.addEventListener('click', function() {
             const productId = this.getAttribute('data-id');
             alert(productId);
-            $('#food_name').text(product.name);
+            $('#product_name').text(product.name);
         });
     });
     

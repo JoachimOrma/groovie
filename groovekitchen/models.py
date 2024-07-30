@@ -223,7 +223,7 @@ class CommunityAgent(db.Model):
         
 class Gallery(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    description = db.Column(db.String(255), nullable=False)
+    description = db.Column(db.String(255), nullable=True)
     image = db.Column(db.Text, nullable=False)
     date_posted = db.Column(db.DateTime, default=datetime.utcnow)
     date_updated = db.Column(db.DateTime, onupdate=datetime.utcnow)

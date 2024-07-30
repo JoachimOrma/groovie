@@ -1,5 +1,6 @@
 import os, requests, random
 from functools import wraps
+from secrets import token_hex
 from flask import render_template, request, redirect, url_for, flash, session, jsonify ,json
 from groovekitchen import app
 from groovekitchen.models import db, Customer, Product, Cart, Payment, Order, Wishlist, OrderItem
@@ -119,7 +120,7 @@ def checkout():
         lastname = request.form.get('lastname')
         amount = request.form.get('amount')
         email = request.form.get('email')
-        ref = str(random.randint(777779737989300398, 999999993898397999999) + 1928398398737844)
+        ref = str(token_hex(16))
         session['payref'] = ref
         
         payment = Payment(amount=amount, customerid=customer.id, firstname=firstname, lastname=lastname, status='pending', email=email, ref=ref)
@@ -183,7 +184,7 @@ def paystack_initialize():
 def payment_landig_page():
     ref = session.get('payref')
     paystackref = request.args.get('reference')
-    if paystackref:
+    if ref == paystackref:
         url = "https://api.paystack.co/transaction/verify/"+ref
         headers = {
             "ContentType": "application/json",
@@ -195,7 +196,7 @@ def payment_landig_page():
         
         if response_json and response_json['status'] is True:
             payment.status = 'paid'
-            orderid = str(random.randint(98878, 456747) + 478)
+            orderid = str(token_hex(16))
             order = Order(order_number=orderid, customerid=payment.customerid, paymentid=payment.id)
             db.session.add(order)
         else:

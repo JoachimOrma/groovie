@@ -1,9 +1,11 @@
 from functools import wraps
-import os, re
+import os, re, random
 from moviepy.editor import VideoFileClip
 from flask import render_template, request, redirect, url_for, session, jsonify
 from secrets import compare_digest, token_hex
 from werkzeug.security import generate_password_hash
+from sqlalchemy import or_
+from sqlalchemy.orm import joinedload
 from groovekitchen import app
 from groovekitchen.forms import FormData
 from groovekitchen.models import db, Product, Chef, Cart, Wishlist, Customer, Post, Like, Comment, Booking
@@ -98,21 +100,68 @@ def chef_registration():
     return render_template('chefs/chef_registration.html', title="Register as a professional chef", customer=customer, number_of_cart_items=number_of_cart_items, number_of_wishlist_item=number_of_wishlist_item)
 
 
-@app.route('/chefs/')
-def professional_chefs():
-    chefs = Chef.query.filter(Chef.status=='1').all()
-    if session.get('useronline'):
-        cid = session.get('useronline')
-        customer = Customer.query.get_or_404(cid)
-        cart_items = Cart.query.filter_by(customerid=customer.id).all()
-        wishlist_items = Wishlist.query.filter_by(customerid=customer.id).all()
-        number_of_wishlist_item = len(wishlist_items)
-        number_of_cart_items = len(cart_items)
+@app.route('/get-chefs/')
+def get_chefs():
+    chefs = Chef.query.filter_by(status='1', verification='unverified').all()
+    if chefs:
+        random.shuffle(chefs)
+        chef_list = [{
+            "id": chef.id,
+            "firstname": chef.customer_deets.firstname,
+            "lastname": chef.customer_deets.lastname,
+            "dp": chef.customer_deets.dp,
+            "specialities": chef.specialities,
+            "city": chef.city,
+            "state": chef.state,
+        } for chef in chefs]
+        return jsonify({"status": "success", "chef_list": chef_list})
     else:
-        number_of_wishlist_item = 0
-        number_of_cart_items = 0
-        customer = None
-    return render_template('chefs/all_chefs.html', title='Professional Chefs', page='professional_chef', chefs=chefs, customer=customer,
+        return jsonify({"status": "not-found"})
+
+
+@app.route('/chefs/', methods=['GET', 'POST'])
+def professional_chefs():
+    if request.method == 'POST':
+        search_input = request.form.get('searchInput')
+        if search_input:
+            random.shuffle(chefs)
+            chefs = Chef.query.join(Customer).filter(
+                or_(
+                    Customer.firstname.ilike(f'%{search_input}%'),
+                    Customer.lastname.ilike(f'%{search_input}%'),
+                    Chef.city.ilike(f'%{search_input}%'),
+                    Chef.state.ilike(f'%{search_input}%'),
+                    Chef.specialities.ilike(f'%{search_input}%')
+                ), Chef.status == '1', Chef.verification == 'unverified').all()
+            if chefs:
+                chef_list = [{
+                    "id": chef.id,
+                    "firstname": chef.customer_deets.firstname,
+                    "lastname": chef.customer_deets.lastname,
+                    "dp": chef.customer_deets.dp,
+                    "specialities": chef.specialities,
+                    "city": chef.city,
+                    "state": chef.state,
+                } for chef in chefs]
+
+                return jsonify({"status": "success", "chef_list": chef_list})
+            else:
+                return jsonify({"status": "not-found"})
+        else:
+            return jsonify({"status": "error"})
+    else:
+        if session.get('useronline'):
+            cid = session.get('useronline')
+            customer = Customer.query.get_or_404(cid)
+            cart_items = Cart.query.filter_by(customerid=customer.id).all()
+            wishlist_items = Wishlist.query.filter_by(customerid=customer.id).all()
+            number_of_wishlist_item = len(wishlist_items)
+            number_of_cart_items = len(cart_items)
+        else:
+            number_of_wishlist_item = 0
+            number_of_cart_items = 0
+            customer = None
+    return render_template('chefs/all_chefs.html',  title='Chefs', page='professional_chef', customer=customer,
                            number_of_cart_items=number_of_cart_items, number_of_wishlist_item=number_of_wishlist_item)
 
 

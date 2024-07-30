@@ -1,6 +1,8 @@
-import re, os
+import re, os, random
 from secrets import token_hex
 from flask import render_template, request, redirect, url_for, flash, session, jsonify, json
+from sqlalchemy.orm import joinedload
+from sqlalchemy import or_
 from groovekitchen import app
 from groovekitchen.models import db, Customer, Cart, Chef, Product, Wishlist, CommunityAgent
 
@@ -61,22 +63,71 @@ def restaurant_details():
     # restaurantid = .query.filter(Carter.id == cid).first()
     return render_template('restaurants/restaurant_details.html', title='Restaurant Details', number_of_cart_items=number_of_cart_items, customer=customer, number_of_wishlist_item=number_of_wishlist_item)
 
-@app.route('/agents/')
-def community_agents():
-    agents = CommunityAgent.query.filter_by(status='1').all()
-    if session.get('useronline'):
-        cid = session.get('useronline')
-        customer = Customer.query.get_or_404(cid)
-        cart_items = Cart.query.filter_by(customerid=customer.id).all()
-        wishlist_items = Wishlist.query.filter_by(customerid=customer.id).all()
-        number_of_wishlist_item = len(wishlist_items)
-        number_of_cart_items = len(cart_items)
+
+@app.route('/get-agents/')
+def get_agents():
+    agents = CommunityAgent.query.filter_by(status='1', verification='unverified').all()
+    if agents:
+        random.shuffle(agents)
+        agent_list = [{
+            "id": agent.id,
+            "firstname": agent.customer_deets.firstname,
+            "lastname": agent.customer_deets.lastname,
+            "dp": agent.customer_deets.dp,
+            "specialities": agent.specialities,
+            "city": agent.city,
+            "state": agent.state,
+        } for agent in agents]
+        return jsonify({"status": "success", "agent_list": agent_list})
     else:
-        number_of_wishlist_item = 0
-        number_of_cart_items = 0
-        customer = None
-    return render_template('agents/agents.html', title='Community Agents', page='community_agent', agents=agents, customer=customer,
+        return jsonify({"status": "not-found"})
+
+
+@app.route('/agents/', methods=['GET', 'POST'])
+def community_agents():
+    if request.method == 'POST':
+        search_input = request.form.get('searchInput')
+        if search_input:
+            random.shuffle(agents)
+            agents = CommunityAgent.query.join(Customer).filter(
+                or_(
+                    Customer.firstname.ilike(f'%{search_input}%'),
+                    Customer.lastname.ilike(f'%{search_input}%'),
+                    CommunityAgent.city.ilike(f'%{search_input}%'),
+                    CommunityAgent.state.ilike(f'%{search_input}%'),
+                    CommunityAgent.specialities.ilike(f'%{search_input}%')
+                ), CommunityAgent.status == '1', CommunityAgent.verification == 'unverified').all()
+            if agents:
+                agent_list = [{
+                    "id": agent.id,
+                    "firstname": agent.customer_deets.firstname,
+                    "lastname": agent.customer_deets.lastname,
+                    "dp": agent.customer_deets.dp,
+                    "specialities": agent.specialities,
+                    "city": agent.city,
+                    "state": agent.state,
+                } for agent in agents]
+
+                return jsonify({"status": "success", "agent_list": agent_list})
+            else:
+                return jsonify({"status": "not-found"})
+        else:
+            return jsonify({"status": "error"})
+    else:
+        if session.get('useronline'):
+            cid = session.get('useronline')
+            customer = Customer.query.get_or_404(cid)
+            cart_items = Cart.query.filter_by(customerid=customer.id).all()
+            wishlist_items = Wishlist.query.filter_by(customerid=customer.id).all()
+            number_of_wishlist_item = len(wishlist_items)
+            number_of_cart_items = len(cart_items)
+        else:
+            number_of_wishlist_item = 0
+            number_of_cart_items = 0
+            customer = None
+    return render_template('agents/agents.html', title='Community Agents', page='community_agent', customer=customer,
                             number_of_wishlist_item=number_of_wishlist_item, number_of_cart_items=number_of_cart_items)
+
 
 @app.route('/career-as-a-community-agent/')
 def community_agent_career():
@@ -308,4 +359,31 @@ def community_agent_product():
     agentid = CommunityAgent.query.filter_by(customerid=cid).first()
     products = Product.query.filter_by(customerid=cid, status='1').all()
     return render_template('agents/products.html', title="My Products", agent=agentid, products=products)
+
+
+@app.route('/agent-view-count/<int:id>/', methods=['GET', 'POST'])
+def agent_profile_view_count(id):
+    agent = CommunityAgent.query.get_or_404(id)
+    agent.view_count += 1
+    db.session.commit()
+    return jsonify({"status": "success"})
+
+
+@app.route('/agent-details/<int:cid>/')
+def agent_details(cid):
+    agentid = CommunityAgent.query.filter_by(id=cid).first()
+    agents = CommunityAgent.query.all()
+    product = Product.query.filter_by(customerid=cid).first() or None
+    if session.get('useronline'):
+        cid = session.get('useronline')
+        customer = Customer.query.get_or_404(cid)
+        cart_items = Cart.query.filter_by(customerid=customer.id).all()
+        number_of_cart_items = len(cart_items)
+        wishlist_items = Wishlist.query.filter_by(customerid=customer.id).all()
+        number_of_wishlist_item = len(wishlist_items)
+    else:
+        number_of_cart_items = 0
+        number_of_wishlist_item = 0
+        customer = None
+    return render_template('agents/agent_details.html', title='Community Agent Details', agent=agentid, agents=agents, customer=customer, number_of_cart_items=number_of_cart_items, number_of_wishlist_item=number_of_wishlist_item, product=product)
 

@@ -1,0 +1,107 @@
+{% extends "caterers/dashboard_layout.html" %}
+
+{% block main %}
+
+    <div class="container">
+        <div class="d-flex justify-content-end">
+            <button class="btn btn-primary rounded-5 mb-3" id="post-button">Post photos from events</button>
+        </div>
+        <div class="row mb-5 shadow py-3 upload-container hidden">
+            <div class="col-md-12">
+                <form action="{{url_for('caterer_gallery')}}" method="post" enctype="multipart/form-data" id="forms">
+                    <input type="hidden" name="csrf_token" value="{{csrf_token()}}" />
+                    <label for="photo"></label>
+                    <input type="file" name="photos" id="photo" multiple>
+                    <div class="my-3">
+                        <input type="text" name="desc" id="desc" placeholder="Add a description (optional)" class="form-control noround"/>
+                    </div>
+                    <div>
+                        <button class="btn btn-primary upload-button">Upload</button>
+                    </div>
+                </form>
+            </div>
+        </div> 
+        {% if gallery %}
+        <div class="row g-4 mt-5">
+            {% for images in gallery %}
+            {% for photo in images.image.split('*') %}
+            <div class="col-xl-3 col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.1s">
+                <div class="card">
+                    <img src="/static/gallery/{{photo}}" alt="..." height="200" style="object-fit: cover;">
+                    <p class="text-center mt-2">{% if images.description %}{{images.description}}{% endif %}</p>
+                </div>
+            </div>
+            {% endfor %}
+           {% endfor %} 
+        </div>   
+        {% else %}
+        <div class="d-flex justify-content-center" style="height: 200px; margin-top: 70px;">
+            <h5>Your gallery is empty, please upload photos from your events.</h5>
+        </div>
+        {% endif %}
+    </div>
+
+
+
+{% endblock main %}
+{% block customJS %}
+<script>
+
+    $('#post-button').click(function(){
+        $('.upload-container').removeClass('hidden');
+        $(this).hide();
+    })
+
+    $('.upload-button').click(function(){
+        const myForm = document.querySelector('#forms');
+        const formData = new FormData(myForm);
+
+        $.ajax({
+            url: "/caterer-gallery/",
+            type: "POST",
+            cache: false,
+            processData: false,
+            contentType: false,
+            data: formData,
+            success: function(response){
+                alert(response.status);
+                if (response.status == 'success'){
+                    swal({
+                        title: "Success!",
+                        text: "Your photos has been uploaded.",
+                        icon: "success",
+                        timer: 1000,
+                        buttons: {
+                            confirm: {
+                                text: "OK",
+                                value: true,
+                                visible: true,
+                                className: "btn btn-success btn-sm",
+                                closeModal: true,
+                            },
+                        },
+                    });
+                }else {
+                    swal({
+                        title: "Error!",
+                        text: "Please select photo to upload.",
+                        icon: "error",
+                        buttons: {
+                            confirm: {
+                                text: "OK",
+                                value: true,
+                                visible: true,
+                                className: "btn btn-danger btn-sm",
+                                closeModal: true,
+                            },
+                        },
+                    });
+                }
+            }
+        });
+    })
+
+
+</script>
+{% endblock customJS %}
+

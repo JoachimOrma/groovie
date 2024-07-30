@@ -1,10 +1,12 @@
 from functools import wraps
-import os, re
+import os, re, random
 from secrets import token_hex, compare_digest
 from flask import render_template, request, redirect, url_for, jsonify, session
 from werkzeug.security import generate_password_hash, check_password_hash
+from sqlalchemy.orm import joinedload
+from sqlalchemy import or_
 from groovekitchen import app
-from groovekitchen.models import db, Caterer, Product, Cart, Customer, Wishlist, Like, Post, Comment, Booking
+from groovekitchen.models import db, Caterer, Product, Cart, Customer, Wishlist, Like, Post, Comment, Booking, Gallery
 
 
 ALLOWED_EXTENSIONS_IMAGES = {'png', 'jpg', 'jpeg', 'gif', 'webp', 'jpg', 'jfif'}
@@ -19,12 +21,10 @@ def login_required(func):
             return redirect(url_for('login'))
     return check_login
 
-
 @app.route('/caterer-details/<int:cid>/')
 def caterer_details(cid):
     catererid = Caterer.query.filter(Caterer.id == cid).first()
     caterers = Caterer.query.all()
-    # gallery = catererid.photos.split('*')
     if session.get('useronline'):
         cid = session.get('useronline')
         customer = Customer.query.get_or_404(cid)
@@ -40,21 +40,69 @@ def caterer_details(cid):
                             number_of_wishlist_item=number_of_wishlist_item)
 
 
-@app.route('/catering-services/')
-def catering_services():
-    caterers = Caterer.query.filter_by(status='1').all()
-    if session.get('useronline'):
-        cid = session.get('useronline')
-        customer = Customer.query.get_or_404(cid)
-        cart_items = Cart.query.filter_by(customerid=customer.id).all()
-        wishlist_items = Wishlist.query.filter_by(customerid=customer.id).all()
-        number_of_cart_items = len(cart_items)
-        number_of_wishlist_item = len(wishlist_items)
+@app.route('/get-caterers/')
+def get_caterers():
+    caterers = Caterer.query.filter_by(status='1', verification='unverified').all()
+    if caterers:
+        random.shuffle(caterer)
+        caterer_list = [{
+            "id": caterer.id,
+            "firstname": caterer.customer_deets.firstname,
+            "lastname": caterer.customer_deets.lastname,
+            "dp": caterer.customer_deets.dp,
+            "specialities": caterer.specialities,
+            "city": caterer.city,
+            "state": caterer.state,
+        } for caterer in caterers]
+        return jsonify({"status": "success", "caterer_list": caterer_list})
     else:
-        number_of_wishlist_item = 0
-        number_of_cart_items = 0
-        customer = None
-    return render_template('caterers/catering_services.html', caterers=caterers, title='Professional Catering Services', page='catering',
+        return jsonify({"status": "not-found"})
+
+
+@app.route('/catering-services/', methods=['GET', 'POST'])
+def catering_services():    
+    if request.method == 'POST':
+        search_input = request.form.get('searchInput')
+        if search_input:
+            random.shuffle(caterer)
+            caterers = Caterer.query.join(Customer).filter(
+                or_(
+                    Customer.firstname.ilike(f'%{search_input}%'),
+                    Customer.lastname.ilike(f'%{search_input}%'),
+                    Caterer.city.ilike(f'%{search_input}%'),
+                    Caterer.state.ilike(f'%{search_input}%'),
+                    Caterer.specialities.ilike(f'%{search_input}%')
+                ), Caterer.status == '1', Caterer.verification == 'unverified').all()
+            if caterers:
+                caterer_list = [{
+                    "id": caterer.id,
+                    "firstname": caterer.customer_deets.firstname,
+                    "lastname": caterer.customer_deets.lastname,
+                    "dp": caterer.customer_deets.dp,
+                    "specialities": caterer.specialities,
+                    "city": caterer.city,
+                    "state": caterer.state,
+                } for caterer in caterers]
+
+                return jsonify({"status": "success", "caterer_list": caterer_list})
+            else:
+                return jsonify({"status": "not-found"})
+        else:
+            return jsonify({"status": "error"})
+    else:
+        gallery = Gallery.query.all()
+        if session.get('useronline'):
+            cid = session.get('useronline')
+            customer = Customer.query.get_or_404(cid)
+            cart_items = Cart.query.filter_by(customerid=customer.id).all()
+            wishlist_items = Wishlist.query.filter_by(customerid=customer.id).all()
+            number_of_cart_items = len(cart_items)
+            number_of_wishlist_item = len(wishlist_items)
+        else:
+            number_of_wishlist_item = 0
+            number_of_cart_items = 0
+            customer = None
+    return render_template('caterers/catering_services.html', title='Caterers & Event Planners', page='catering', gallery=gallery,
                            number_of_wishlist_item=number_of_wishlist_item, number_of_cart_items=number_of_cart_items, customer=customer)
 
 
@@ -356,3 +404,35 @@ def caterer_profile_view_count(id):
     caterer.view_count += 1
     db.session.commit()
     return jsonify({"status": "success"})
+
+
+@app.route('/caterer-gallery/', methods=['GET', 'POST'])
+def caterer_gallery():
+    cid = session.get('useronline')
+    catererid = Caterer.query.get_or_404(cid)
+    gallery = Gallery.query.filter_by(catererid=cid).all()
+    if request.method == 'POST':
+        description = request.form.get('desc')
+        photos = request.files.getlist('photos')
+
+        print(request.form)
+
+        if photos:
+            image_list = []
+            for photo in photos[:4]:
+                file_name = photo.filename
+                ext = os.path.splitext(file_name)[1] 
+                new_filename = token_hex(16) + ext
+                photo.save('groovekitchen/static/gallery/' + new_filename)
+                image_list.append(new_filename)
+           
+            images = '*'.join(image_list)
+            gal = Gallery(description=description, image=images, catererid=cid)
+            db.session.add(gal)
+            db.session.commit()
+            return jsonify({'status': 'success'})
+        else:
+            return jsonify({'status': 'error'})
+
+    return render_template('caterers/event_gallery.html', title='My Gallery', gallery=gallery, caterer=catererid)
+

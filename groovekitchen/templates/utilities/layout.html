@@ -32,6 +32,15 @@
 
     <!-- Template Stylesheet -->
     <link href="/static/css/style.css" rel="stylesheet">
+
+    <!-- Favicon -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/favicon_io/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon_io/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon_io/favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="/static/favicon_io/android-chrome-512x512.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/static/favicon_io/android-chrome-192x192.png">
+    <link rel="icon" type="image/png" sizes="48x48" href="/static/favicon_io/favicon.png">
+    <link rel="manifest" href="/static/favicon_io/site.webmanifest">
 </head>
 
 <body>
@@ -49,10 +58,10 @@
         <div class="container-xxl position-relative p-0">
            {% include 'utilities/navbar.html' %}
             {% block banner %}
-            <div class="container-xxl pt-3 mb-5 pb-3 pt-lg-3 bg-dark hero-header d-none d-md-block">
-                <div class="container text-center mb-5 mt-lg-5 pt-3 pt-lg-5">
-                    {% block search %}
-                        <h1 class="display-5 text-white animated slideInDown">{{title}}</h1>
+            <div class="container-xxl pt-md-3 mb-md-2 pb-md-0 bg-dark hero-header">
+                <div class="container text-center mb-1 mt-lg-5 pt-md-3 pt-2 pt-lg-5">
+                    <div class="d-none d-md-block">
+                        <h3 class="display-6 text-white animated slideInDown">{{title}}</h3>
                         <nav aria-label="breadcrumb">
                             <ol class="breadcrumb justify-content-center text-uppercase">
                                 <li class="breadcrumb-item"><a href="#">Home</a></li>
@@ -60,6 +69,14 @@
                                 <li class="breadcrumb-item text-white active" aria-current="page">{{title}}</li>
                             </ol>
                         </nav>
+                    </div>
+                    {% block search %}
+                    <form action="" method="post" class="pb-2 pb-md-3">
+                        <div class="position-relative mx-md-auto mx-0 search-area" style="z-index:0">
+                            <input class="form-control border-primary py-2 py-md-3 ps-4 pe-5" type="text" name="searchInput" id="search-box" placeholder="Search {{title}}..." required />
+                            <button type="button" class="btn btn-primary py-md-2 py-1 position-absolute top-0 end-0 mt-md-2 mt-1 me-md-2 me-1 search-button">Search</button>
+                        </div>
+                    </form>
                     {% endblock search %}
                 </div>
                 {% endblock banner %}

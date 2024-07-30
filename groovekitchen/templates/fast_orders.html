@@ -1,21 +1,8 @@
 {% extends 'utilities/layout.html' %}
 {% block main %}
 
-  <div class="row mt-3 mb-5" style="min-height: 420px;">
-    <div class="col">
-      <form action="{{url_for('fast_orders')}}" method="post">
-        <input type="hidden" name="csrf_token" value="{{csrf_token()}}" />
-        <div class="position-relative" style="max-width: 600px; margin: 0px auto">
-            <input class="form-control border-primary w-100 py-3 ps-4 pe-5" type="text" name="searchInput" id="search-box" placeholder="Enter order number to load products">
-            <button type="button" class="btn btn-primary py-2 position-absolute top-0 end-0 mt-2 me-2" id="search-button">Load</button>
-        </div>
-      </form>
-    </div>     
-  </div>
-  <div id="items-container">
+  <div id="items-container" style="margin-bottom: 250px">
 
-  </div>
-      
   </div>
 
 {% endblock main %}
@@ -82,12 +69,12 @@
           
           // Append the constructed rows to the table body
           $("#items-table-body").append(itemHtml);
-        } else {
-          alert('Error: Could not retrieve order details.');
+        } else if (response.status == 'not-found'){
+          $('#items-container').text('Order ID is not valid.');
         }
       },
       error: function() {
-        alert('Error: Request failed.');
+        $('#items-container').text('Sorry, we could not retrieve the order details. Please try again.');
       }
     });
   });

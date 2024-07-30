@@ -30,12 +30,14 @@
     <div class="card-body">
         <div class="d-flex align-items-center">
             <h5 class="card-title">Create Products</h5>
+            {% if not products %}
             <h6 class="ms-auto">
                 <a  type="button" data-bs-toggle="modal" data-bs-target="#createProductModal" class="p-2 px-3" style="border-radius: 15px; background-color: lightblue;">Create Product</a>
             </h6>
+            {% endif %}
         </div>
         {% if products %}
-        <p class="card-text">You have {{number_of_products}} {% if number_of_products > 1 %}products {% else %} product {% endif %} available.</p>
+        <p class="card-text">You have {{ products | length }} product{{ number_of_products | pluralize }} available.</p>
         <a href="{{url_for('community_agent_product')}}" class="btn btn-primary">My Products</a>
         {% else %}
         <span class="card-text">You haven't created any products yet.</span><br />

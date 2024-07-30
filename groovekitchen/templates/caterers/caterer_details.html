@@ -21,23 +21,28 @@
                     <img src="/static/photos/{{caterer.customer_deets.dp}}" alt="..." class="img-fluid mb-3"/>
                 </div>
             </div>
-            <div class="col-lg-6 mt-3">
-                <h5 class="d-flex">
-                    Caterer, {{caterer.customer_deets.firstname}} {{caterer.customer_deets.lastname}}
-                    {% if caterer.verification == 'verified' %}
-                    <img src="/static/photos/verify.png" width="25" class="ms-2"/>
+            <div class="col-md-6 mt-3 d-flex flex-column ms-5 ms-md-0">
+                <span class="d-flex h6">
+                    {% if session.get('useronline') %} 
+                        <i class="fa-solid fa-circle online me-2" style="color: green; font-size: x-small;"></i> 
+                    {% else %}
+                    <i class="fa-solid fa-circle me-2" style="color: grey; font-size: x-small;"></i> 
                     {% endif %}
-                </h5>
+                    {{ caterer.customer_deets.firstname }} {{caterer.customer_deets.lastname}}
+                    {% if caterer.verification == 'verified' %}
+                        <img src="/static/photos/verify.png" width="20" class="ms-1"/>
+                    {% endif %}
+                </span>
                 <h6><i class="fa fa-location-dot"></i> {{caterer.city}}, {{caterer.state}}, Nigeria</h6>
-                <h6 class="text-primary mt-3"><i class="fa fa-circle-check"></i> Specialties</h6>
-                <p class="text-justified my-3"> {{caterer.specialities}} </p>
+                <h6 class="text-primary mt-2"><i class="fa fa-circle-check"></i> Specialties</h6>
+                <p class="text-justified my-2"> {{caterer.specialities}} </p>
                 <div class="my-3 d-flex flex-column">
                     <h6 class="text-primary"><i class="fa fa-clock"></i> Working Days</h6>
                     <span>{{caterer.working_days}}</span>
                 </div>
-                <div class="d-flex mt-4 flex-column">
-                    <a href="" class="btn btn-dark col-5 mb-2" data-bs-target="#priceModal" data-bs-toggle="modal">Price Listing</a>
-                    <a href="" class="btn btn-blue col-5" data-bs-target="#bookingModal" data-bs-toggle="modal">Book Now</a>
+                <div class="d-flex mt-3 flex-column">
+                    <a href="" class="btn btn-dark col-md-6 col-10 mb-2" data-bs-target="#priceModal" data-bs-toggle="modal">Price Listing</a>
+                    <a href="" class="btn btn-blue col-md-6 col-10" data-bs-target="#bookingModal" data-bs-toggle="modal">Book Now</a>
                     
                      <!--Caterer Booking-->
                      <div class="modal fade" id="bookingModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" aria-labelledby="exampleModalLabel" aria-hidden="true">
@@ -115,30 +120,40 @@
                 
             </div>
         </div>
-        <div class="row pt-5 pb-3">
-            <h2 class="text-center">Other Professional Caterers</h2>
-            <div class="tab-content mb-5">
-               <div class="tab-pane fade show p-0 active">
-                   <div class="row g-4">
-                       {% for baker in caterers %}
-                        {% if baker.id != caterer.id %}
-                        <div class="col-lg-3 col-md-6 col-11 wow fadeInUp card-col" data-wow-delay="0.1s">
-                        <div class="card caterer-card">
-                            <input type="hidden" name="catererId" class="caterer-input" value="{{caterer.id}}" />
-                            <img src="/static/photos/{{ baker.dp }}" alt="..." height="150" style="object-fit: cover;">
-                            <div class="footer p-2 d-flex flex-column text-center" style="font-size: small;">
-                                <span class="h6">{{ baker.firstname }} {{baker.lastname}}</span>
-                                <span class="card-text my-2" style="background: lavender; border-radius: 4px"> {{ baker.specialities }}</span>
-                                <span class="text-muted px-2" style="font-style: italic;"><i class="fas fa-location-dot text-warning"></i> {{baker.city}}, {{ baker.state }} State</span>
+        {% if caterers | length > 1 %}
+            <div class="row pt-5 pb-3">
+                <h2 class="text-center">Other Professional Caterers</h2>
+                <div class="tab-content mb-5">
+                <div class="tab-pane fade show p-0 active">
+                    <div class="row g-4">
+                        {% for baker in caterers %}
+                            {% if baker.id != caterer.id %}
+                            <div class="col-lg-3 col-md-6 col-11 wow fadeInUp card-col" data-wow-delay="0.1s">
+                            <div class="card caterer-card">
+                                <input type="hidden" name="catererId" class="caterer-input" value="{{caterer.id}}" />
+                                <img src="/static/photos/{{ baker.dp }}" alt="..." height="150" style="object-fit: cover;">
+                                <div class="footer p-2 d-flex flex-column text-center" style="font-size: small;">
+                                    {% if session.get('useronline') %} 
+                                        <i class="fa-solid fa-circle online me-2" style="color: green; font-size: x-small;"></i> 
+                                    {% else %}
+                                    <i class="fa-solid fa-circle me-2" style="color: grey; font-size: x-small;"></i> 
+                                    {% endif %}
+                                    {{ baker.firstname }} {{baker.lastname}}
+                                    {% if caterer.verification == 'verified' %}
+                                        <img src="/static/photos/verify.png" width="20" class="ms-1"/>
+                                    {% endif %}
+                                    <span class="card-text my-2" style="background: lavender; border-radius: 4px"> {{ baker.specialities }}</span>
+                                    <span class="text-muted px-2" style="font-style: italic;"><i class="fas fa-location-dot text-warning"></i> {{baker.city}}, {{ baker.state }} State</span>
+                                </div>
                             </div>
-                        </div>
-                        </div>
-                        {% endif %}
-                       {% endfor %}
-                   </div>
+                            </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    </div>
                 </div>
             </div>
-        </div>
+        {% endif %}
     </div>
 {% endblock main %}
 
