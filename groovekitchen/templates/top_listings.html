@@ -41,15 +41,15 @@
                         if (useronline) {
                             if (product.wishlist_deets) {
                                 wishlistHtml += `
-                                    <a type="button" class="d-flex justify-content-end wishlist">
-                                        <i class="fa-solid fa-heart wishlistIcon"></i>
+                                    <a type="button" class="d-flex justify-content-center mt-1 wishlist">
+                                        <i class="fa-solid fa-heart fs-5 wishlistIcon"></i>
                                     </a>
                                     <input type="hidden" name="cartItem" class="cartItem" value="${product.id}">
                                 `;
                             } else {
                                 wishlistHtml += `
-                                    <a type="button" class="d-flex justify-content-end wishlist">
-                                        <i class="fa-regular fa-heart wishlistIcon"></i>
+                                    <a type="button" class="d-flex justify-content-center mt-1 nd wishlist">
+                                        <i class="fa-regular fa-heart fs-5 wishlistIcon"></i>
                                     </a>
                                     <input type="hidden" name="cartItem" class="cartItem" value="${product.id}">
                                 `;
@@ -57,8 +57,8 @@
                         } else {
                             // User is not online
                             wishlistHtml += `
-                                <a type="button" class="d-flex justify-content-end wishlist" data-bs-target="#loginModal" data-bs-toggle="modal">
-                                    <i class="fa-regular fa-heart wishlistIcon"></i>
+                                <a type="button" class="d-flex justify-content-center mt-1 wishlist" data-bs-target="#loginModal" data-bs-toggle="modal">
+                                    <i class="fa-regular fa-heart fs-5 wishlistIcon"></i>
                                 </a>
                             `;
                         }
@@ -80,16 +80,16 @@
                                             <input type="hidden" name="cartItem" class="cartItem" value="${product.id}">
                                         </div>
                                          <div class="text-center p-2">
-                                            <a class="d-block text-dark mb-2" href="#">${product.name}</a>
-                                            <span class="text-primary me-1 d-flex align-items-center position-relative">
-                                               <span class="ms-5"> N${product.price} </span>
-                                               <span class="position-absolute end-0 bottom-4"> ${wishlistHtml} </span> 
+                                            <a class="d-block text-dark mb-2">${product.name}</a>
+                                            <span class="text-primary text-center">
+                                               N${product.price}
                                             </span>
-                                            <div class="d-flex quantity">
-                                                <small class="w-100 text-center py-2 border"">
+                                            <div class="d-flex mt-2">
+                                                <small class="w-75 text-center py-2 border"">
                                                     ${cartButtonHtml}
                                                     <input type="hidden" name="cartItem" class="cartItem" value="${product.id}">
                                                 </small>
+                                                <small class="w-25 py-2 border"> ${wishlistHtml} </small>
                                             </div>      
                                         </div>
                                     </div>
@@ -132,15 +132,15 @@
                         if (useronline) {
                             if (product.wishlist_deets) {
                                 wishlistHtml += `
-                                    <a type="button" class="d-flex justify-content-end wishlist">
-                                        <i class="fa-solid fa-heart wishlistIcon"></i>
+                                    <a type="button" class="d-flex justify-content-center mt-1 wishlist">
+                                        <i class="fa-solid fa-heart fs-5 wishlistIcon"></i>
                                     </a>
                                     <input type="hidden" name="cartItem" class="cartItem" value="${product.id}">
                                 `;
                             } else {
                                 wishlistHtml += `
-                                    <a type="button" class="d-flex justify-content-end wishlist">
-                                        <i class="fa-regular fa-heart wishlistIcon"></i>
+                                    <a type="button" class="d-flex justify-content-center mt-1 wishlist">
+                                        <i class="fa-regular fa-heart fs-5 wishlistIcon"></i>
                                     </a>
                                     <input type="hidden" name="cartItem" class="cartItem" value="${product.id}">
                                 `;
@@ -148,8 +148,8 @@
                         } else {
                             // User is not online
                             wishlistHtml += `
-                                <a type="button" class="d-flex justify-content-end wishlist" data-bs-target="#loginModal" data-bs-toggle="modal">
-                                    <i class="fa-regular fa-heart wishlistIcon"></i>
+                                <a type="button" class="d-flex justify-content-center mt-1 wishlist" data-bs-target="#loginModal" data-bs-toggle="modal">
+                                    <i class="fa-regular fa-heart fs-5 wishlistIcon"></i>
                                 </a>
                             `;
                         }
@@ -173,14 +173,14 @@
                                          <div class="text-center p-2">
                                             <a class="d-block text-dark mb-2" href="#">${product.name}</a>
                                             <span class="text-primary me-1 d-flex align-items-center position-relative">
-                                               <span class="ms-5"> N${product.price} </span>
-                                               <span class="position-absolute end-0 bottom-4"> ${wishlistHtml} </span> 
+                                               N${product.price}
                                             </span>
-                                            <div class="d-flex quantity">
-                                                <small class="w-100 text-center py-2 border"">
+                                            <div class="d-flex mt-2">
+                                                <small class="w-75 text-center py-2 border"">
                                                     ${cartButtonHtml}
                                                     <input type="hidden" name="cartItem" class="cartItem" value="${product.id}">
                                                 </small>
+                                                <small class="w-25 py-2 border">${wishlistHtml}</small>
                                             </div>      
                                         </div>
                                     </div>

@@ -69,7 +69,8 @@
         <div class="container" style="min-height: 500px;">
             <div class="row flex-md-row-reverse g-0 gx-2 gx-lg-5 justify-content-between">
                 <div class="col-md-6 text-start text-lg-end mb-3">
-                    <form action="" method="post">
+                    <form action="{{url}}" method="post" id='search-form'>
+                        <input type="hidden" name="csrf_token" value="{{csrf_token()}}">
                         <div class="position-relative">
                             <input class="form-control border-primary w-100 py-2 ps-2 pe-5" type="text" name="searchInput" id="search-box" placeholder="What would you like to eat?" required>
                             <button type="button" class="btn btn-primary btn-sm position-absolute mt-1 top-0 end-0 me-2" id="search-button">Search</button>
@@ -140,7 +141,7 @@
         });
 
         $('#search-button').click(function(){
-            const searchInput = $('#search-box').val();
+            const searchInput = $('#search-box').val().trim();
             if(searchInput){
                 window.location.replace(`/category/${searchInput}/`);
             }

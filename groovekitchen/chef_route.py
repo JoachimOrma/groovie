@@ -107,6 +107,7 @@ def get_chefs():
         random.shuffle(chefs)
         chef_list = [{
             "id": chef.id,
+            "customerid": chef.customerid,
             "firstname": chef.customer_deets.firstname,
             "lastname": chef.customer_deets.lastname,
             "dp": chef.customer_deets.dp,

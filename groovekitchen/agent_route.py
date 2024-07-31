@@ -329,7 +329,7 @@ def categories(searchInput):
         customer = None
         cart_items = None
 
-    return render_template('agents/categories.html', title="Search result", customer=customer, searchInput=searchInput, number_of_wishlist_item=number_of_wishlist_item, number_of_cart_items=number_of_cart_items)
+    return render_template('agents/categories.html', url="/search-result/", title="Search result", customer=customer, searchInput=searchInput, number_of_wishlist_item=number_of_wishlist_item, number_of_cart_items=number_of_cart_items)
 
 
 @app.route('/search-result/', methods=['POST'])
@@ -338,6 +338,8 @@ def search_result():
     if search_input:
         products = Product.query.filter(Product.name.ilike(f'%{search_input}%')).all()
         if products:
+            random.shuffle(products)
+            count_results = len(products)
             product_list = [{
                 "id": product.id,
                 "name": product.name,
@@ -346,7 +348,7 @@ def search_result():
                 "description": product.description,
                 "customerid": product.customerid,
             } for product in products]
-            return jsonify({"status": "success", "product_list": product_list})
+            return jsonify({"status": "success", "product_list": product_list, "count_results": count_results})
         else:
             return jsonify({"status": "not-found"})
     else:

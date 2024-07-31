@@ -88,57 +88,59 @@
 
     //Handling searching for agents, by location, name, and specialities
     $('.search-button').click(function(){
-        const searchInput = $('#search-box').val();
-        $.ajax({
-            url: "/agents/",
-            type: "POST",
-            data: {"csrf_token": "{{csrf_token()}}", "searchInput": searchInput},
-            success: function(response) {
-                if (response.status == "success") {
-                    const useronline = "{{session.get('useronline')}}"; 
-                    let agentHtml = "";
-                    $("#agent-container").empty();
-    
-                    response.agent_list.forEach(agent => {
-                        // Determine online status icon
-                        let onlineStatusHtml = '';
-                        if (useronline) {
-                            onlineStatusHtml = '<i class="fa-solid fa-circle online me-2" style="color: green; font-size: x-small;"></i>';
-                        } else {
-                            onlineStatusHtml = '<i class="fa-solid fa-circle me-2" style="color: grey; font-size: x-small;"></i>';
-                        }
-                        // Using the first letter of their lastname
-                        const lastname = agent.lastname ? agent.lastname[0] : '';
-                        agentHtml += `
-                            <div class="col-lg-3 col-md-4 col-6">
-                            <div class="card agent-card">
-                                <input type="hidden" class="agent-input" name="agentId" value="${agent.id}" />
-                                <img src="/static/photos/${agent.dp}" alt="..." height="210" style="object-fit: cover;">
-                                <div class="footer p-2 d-flex flex-column text-center" style="font-size: small;">
-                                    <span class="h6 d-flex align-items-center justify-content-center">
-                                    ${onlineStatusHtml}
-                                    ${agent.firstname} ${lastname}.
-                                    <img src="/static/photos/verify.png" width="16" class="ms-1"/>
-                                    </span>
-                                    <span class="card-text text-format" style="background: lavender; border-radius: 4px"> ${agent.specialities}</span>
-                                    <span class="text-muted px-2" style="font-style: italic;"><i class="fas fa-location-dot text-warning"></i> ${agent.city}, ${agent.state} State</span>
+        const searchInput = $('#search-box').val().trim();
+        if (searchInput){
+            $.ajax({
+                url: "/agents/",
+                type: "POST",
+                data: {"csrf_token": "{{csrf_token()}}", "searchInput": searchInput},
+                success: function(response) {
+                    if (response.status == "success") {
+                        const useronline = "{{session.get('useronline')}}"; 
+                        let agentHtml = "";
+                        $("#agent-container").empty();
+        
+                        response.agent_list.forEach(agent => {
+                            // Determine online status icon
+                            let onlineStatusHtml = '';
+                            if (useronline) {
+                                onlineStatusHtml = '<i class="fa-solid fa-circle online me-2" style="color: green; font-size: x-small;"></i>';
+                            } else {
+                                onlineStatusHtml = '<i class="fa-solid fa-circle me-2" style="color: grey; font-size: x-small;"></i>';
+                            }
+                            // Using the first letter of their lastname
+                            const lastname = agent.lastname ? agent.lastname[0] : '';
+                            agentHtml += `
+                                <div class="col-lg-3 col-md-4 col-6">
+                                <div class="card agent-card">
+                                    <input type="hidden" class="agent-input" name="agentId" value="${agent.id}" />
+                                    <img src="/static/photos/${agent.dp}" alt="..." height="210" style="object-fit: cover;">
+                                    <div class="footer p-2 d-flex flex-column text-center" style="font-size: small;">
+                                        <span class="h6 d-flex align-items-center justify-content-center">
+                                        ${onlineStatusHtml}
+                                        ${agent.firstname} ${lastname}.
+                                        <img src="/static/photos/verify.png" width="16" class="ms-1"/>
+                                        </span>
+                                        <span class="card-text text-format" style="background: lavender; border-radius: 4px"> ${agent.specialities}</span>
+                                        <span class="text-muted px-2" style="font-style: italic;"><i class="fas fa-location-dot text-warning"></i> ${agent.city}, ${agent.state} State</span>
+                                    </div>
                                 </div>
-                            </div>
-                            </div>
-                        `;
-                    });
-                    $("#agent-container").append(agentHtml);
-                    $("#sub-title").text("Community Agents");
-    
-                } else if (response.status == "not-found"){
-                    $("#agent-container").html("<p class='d-flex justify-content-center'>No agents found.</p>");
+                                </div>
+                            `;
+                        });
+                        $("#agent-container").append(agentHtml);
+                        $("#sub-title").text("Community Agents");
+        
+                    } else if (response.status == "not-found"){
+                        $("#agent-container").html("<p class='d-flex justify-content-center'>No agents found.</p>");
+                    }
+                },
+                error: function(error) {
+                    $("#agent-container").html("<p class='d-flex justify-content-center'>Something went wrong. Please, try again.</p>");
                 }
-            },
-            error: function(error) {
-                $("#agent-container").html("<p class='d-flex justify-content-center'>Something went wrong. Please, try again.</p>");
-            }
-              
-        });
+                
+            });
+        }
     });
   </script>
 {% endblock customJS %}

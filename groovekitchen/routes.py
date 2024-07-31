@@ -106,7 +106,7 @@ def pluralize(number, singular='', plural='s'):
     #         return False
     # return redirect(url_for('index'))
 
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])
 def home():
     if session.get('useronline'):
         cid = session.get('useronline')
