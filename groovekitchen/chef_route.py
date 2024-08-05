@@ -8,7 +8,7 @@ from sqlalchemy import or_
 from sqlalchemy.orm import joinedload
 from groovekitchen import app
 from groovekitchen.forms import FormData
-from groovekitchen.models import db, Product, Chef, Cart, Wishlist, Customer, Post, Like, Comment, Booking
+from groovekitchen.models import db, Product, Chef, Cart, Wishlist, Customer, Post, Like, Comment, Booking, Speciality
 
 
 ALLOWED_EXTENSIONS_IMAGES = {'png', 'jpg', 'jpeg', 'gif', 'webp', 'jpg', 'jfif'}
@@ -36,42 +36,30 @@ def login_required(func):
 
 @app.route('/career-as-a-chef/')
 def chef_career():
-    if session.get('useronline'):
-        cid = session.get('useronline')
+    cid = session.get('useronline')
+    if cid:
         customer = Customer.query.get_or_404(cid)
-        cart_items = Cart.query.filter_by(customerid=customer.id).all()
-        wishlist_items = Wishlist.query.filter_by(customerid=customer.id).all()
-        number_of_cart_items = len(cart_items)
-        number_of_wishlist_item = len(wishlist_items)
-    else:
-        number_of_wishlist_item = 0
-        number_of_cart_items = 0
-        customer = None
-    return render_template('chefs/private_chef.html', title="Career as a professional chef", customer=customer, number_of_cart_items=number_of_cart_items, number_of_wishlist_item=number_of_wishlist_item)
+        number_of_cart_items = Cart.query.filter_by(customerid=customer.id).count()
+    customer = None
+    number_of_cart_items = 0
+    return render_template('chefs/private_chef.html',
+        title="Career as a professional chef",
+        customer=customer,
+        number_of_cart_items=number_of_cart_items,
+    )
 
 
 @app.route('/register-as-a-chef/', methods=['GET', 'POST'])
 def chef_registration():
-    if session.get('useronline'):
-        cid = session.get('useronline')
-        customer = Customer.query.get_or_404(cid)
-        cart_items = Cart.query.filter_by(customerid=customer.id).all()
-        wishlist_items = Wishlist.query.filter_by(customerid=customer.id).all()
-        number_of_cart_items = len(cart_items)
-        number_of_wishlist_item = len(wishlist_items)
-    else:
-        number_of_wishlist_item = 0
-        number_of_cart_items = 0
-        customer = None
     if request.method == 'POST':
         state = request.form.get('state')
         city = request.form.get('city')
         phone = request.form.get('phone')
-        specialities = request.form.get('specialities')
+        speciality = request.form.get('specialities')
         working_days = request.form.get('working_days')
         photo_file = request.files['photo']
         
-        if state and city and phone and specialities and working_days and photo_file:
+        if state and city and phone and speciality and working_days and photo_file:
             file_name = photo_file.filename
             file_deets = file_name.split('.')
             ext = file_deets[-1]
@@ -84,7 +72,7 @@ def chef_registration():
                 state=state,
                 city=city,
                 status='1',
-                specialities=specialities,
+                specialityid=speciality,
                 working_days=working_days,
             )
             customer.dp=new_filename
@@ -96,8 +84,20 @@ def chef_registration():
             return jsonify({"status": "success"})
         else:
             return jsonify({"status": "error"})
-        
-    return render_template('chefs/chef_registration.html', title="Register as a professional chef", customer=customer, number_of_cart_items=number_of_cart_items, number_of_wishlist_item=number_of_wishlist_item)
+    else:
+        specialities = Speciality.query.all()
+        cid = session.get('useronline')
+        if cid:
+            customer = Customer.query.get_or_404(cid)
+            number_of_cart_items = Cart.query.filter_by(customerid=customer.id).count()
+        customer = None
+        number_of_cart_items = 0
+    return render_template('chefs/chef_registration.html',
+        title="Register as a professional chef",
+        customer=customer,
+        number_of_cart_items=number_of_cart_items,
+        specialities=specialities,
+    )
 
 
 @app.route('/get-chefs/')
@@ -125,7 +125,6 @@ def professional_chefs():
     if request.method == 'POST':
         search_input = request.form.get('searchInput')
         if search_input:
-            random.shuffle(chefs)
             chefs = Chef.query.join(Customer).filter(
                 or_(
                     Customer.firstname.ilike(f'%{search_input}%'),
@@ -135,6 +134,7 @@ def professional_chefs():
                     Chef.specialities.ilike(f'%{search_input}%')
                 ), Chef.status == '1', Chef.verification == 'unverified').all()
             if chefs:
+                random.shuffle(chefs)
                 chef_list = [{
                     "id": chef.id,
                     "firstname": chef.customer_deets.firstname,
@@ -144,43 +144,32 @@ def professional_chefs():
                     "city": chef.city,
                     "state": chef.state,
                 } for chef in chefs]
-
                 return jsonify({"status": "success", "chef_list": chef_list})
             else:
                 return jsonify({"status": "not-found"})
         else:
             return jsonify({"status": "error"})
     else:
-        if session.get('useronline'):
-            cid = session.get('useronline')
+        search = "E.g: Doe or Ajah or African Cuisine"
+        text = "Find professional chefs around you."
+        cid = session.get('useronline')
+        if cid:
             customer = Customer.query.get_or_404(cid)
-            cart_items = Cart.query.filter_by(customerid=customer.id).all()
-            wishlist_items = Wishlist.query.filter_by(customerid=customer.id).all()
-            number_of_wishlist_item = len(wishlist_items)
-            number_of_cart_items = len(cart_items)
-        else:
-            number_of_wishlist_item = 0
-            number_of_cart_items = 0
-            customer = None
-    return render_template('chefs/all_chefs.html',  title='Chefs', page='professional_chef', customer=customer,
-                           number_of_cart_items=number_of_cart_items, number_of_wishlist_item=number_of_wishlist_item)
+            number_of_cart_items = Cart.query.filter_by(customerid=customer.id).count()
+        customer = None
+        number_of_cart_items = 0
+    return render_template('chefs/all_chefs.html',
+        search=search, 
+        text=text, 
+        title='Chefs',
+        page='professional_chef',
+        customer=customer,
+        number_of_cart_items=number_of_cart_items
+    )
 
 
 @app.route('/chef-details/<int:cid>/', methods=['GET', 'POST'])
-def chef_details(cid):
-    chefid = Chef.query.filter(Chef.id == cid).first()
-    chefs = Chef.query.filter_by(status='1').all()
-    if session.get('useronline'):
-        cid = session.get('useronline')
-        customer = Customer.query.get(cid)
-        cart_items = Cart.query.filter_by(customerid=customer.id).all()
-        number_of_cart_items = len(cart_items)
-        wishlist_items = Wishlist.query.filter_by(customerid=customer.id).all()
-        number_of_wishlist_item = len(wishlist_items)
-    else:
-        number_of_cart_items = 0
-        number_of_wishlist_item = 0
-        customer = None
+def chef_details(cid):    
     if request.method == 'POST':
         name = request.form.get('fullname')
         email = request.form.get('email')
@@ -195,13 +184,22 @@ def chef_details(cid):
             return jsonify({"status": "success"})
         else:
             return jsonify({"status": "error"})
-
-
-    return render_template('chefs/chef_details.html', title='Chef Details', chef=chefid, chefs=chefs, customer=customer, number_of_cart_items=number_of_cart_items, number_of_wishlist_item=number_of_wishlist_item)
+    else:
+        chefid = Chef.query.filter(Chef.id == cid).first()
+        chefs = Chef.query.filter_by(status='1').all()
+        chefid.view_count += 1
+        db.session.commit()
+        cid = session.get('useronline')
+        if cid:
+            customer = Customer.query.get_or_404(cid)
+            number_of_cart_items = Cart.query.filter_by(customerid=customer.id).count()
+        customer = None
+        number_of_cart_items = 0
+    return render_template('chefs/chef_details.html', title='Chef Details', chef=chefid, chefs=chefs, customer=customer, number_of_cart_items=number_of_cart_items)
 
 
 @app.route('/chef-dashboard/')
-# @login_required
+@login_required
 def chef_dashboard():
     cid = session.get('useronline')
     chefid = Chef.query.filter_by(customerid=cid).first()
@@ -227,9 +225,6 @@ def chef_profile():
 @app.route('/chef-profile-setting/', methods=['GET', 'POST'])
 @login_required
 def chef_profile_setting():
-    cid = session.get('useronline')
-    chefid = Chef.query.filter_by(customerid=cid).first()
-    customer = Customer.query.filter_by(id=chefid.customerid).first()
     if request.method == 'POST':
         firstname = request.form.get('firstname')
         lastname = request.form.get('lastname')
@@ -265,17 +260,16 @@ def chef_profile_setting():
             return jsonify({"page": "/chef-profile-setting/", "status": "success"})
         else:
             return jsonify({"message":"Please complete all data fields!", "status": "error"})
-    
+    else:
+        cid = session.get('useronline')
+        chefid = Chef.query.filter_by(customerid=cid).first()
+        customer = Customer.query.filter_by(id=chefid.customerid).first()
     return render_template('chefs/profile_setting.html', title='Profile Setting', page='profile-setting', chef=chefid)
 
 
 @app.route('/chef-account-setting/', methods=['GET', 'POST'])
 @login_required
 def chef_account_setting():
-    cid = session.get('useronline')
-    chefid = Chef.query.filter_by(customerid=cid).first()
-    customer = Customer.query.filter_by(id=chefid.customerid).first()
-
     if request.method == 'POST':
         password = request.form.get('password')
         confirm_password = request.form.get('confirm_password')
@@ -289,14 +283,16 @@ def chef_account_setting():
             else:
                 return jsonify({"status": "unmatch_password"}) 
         return jsonify({"status": "error"}) 
+    else:
+        cid = session.get('useronline')
+        chefid = Chef.query.filter_by(customerid=cid).first()
+        customer = Customer.query.filter_by(id=chefid.customerid).first()
     return render_template('chefs/account_setting.html', title='Account Setting', page='account-setting', chef=chefid)
 
 
 @app.route('/chef-create-product/', methods=['GET', 'POST'])
 @login_required
 def chef_create_product():
-    cid = session.get('useronline')
-    chefid = Chef.query.filter_by(customerid=cid).first()
     if request.method == 'POST':
         product_name = request.form.get('product_name')
         price = request.form.get('price')
@@ -319,6 +315,9 @@ def chef_create_product():
             return jsonify({"status": "success"})
         else:
             return jsonify({"status": "error"})
+    else:
+        cid = session.get('useronline')
+        chefid = Chef.query.filter_by(customerid=cid).first()
     return render_template('chefs/create_product.html', title='Create Product', chef=chefid)
 
 
@@ -327,7 +326,6 @@ def chef_create_product():
 def chef_delete_account(cid):
     cid = session.get('useronline')
     chefid = Chef.query.filter_by(customerid=cid).first()
-    
     chefid.status = '0'
     db.session.commit()
     
@@ -338,8 +336,7 @@ def chef_delete_account(cid):
 @login_required
 def chef_deactivate_account(cid):
     cid = session.get('useronline')
-    chefid = Chef.query.filter_by(customerid=cid).first()
-    
+    chefid = Chef.query.filter_by(customerid=cid).first() 
     chefid.status = '2'
     db.session.commit()
     
@@ -354,20 +351,10 @@ def chef_logout():
         session.clear()
     return redirect(url_for('login'))
     
-    
-@app.route('/view-chef-profile/')
-@login_required
-def view_chef_profile():
-    cid = session.get('useronline')
-    chefid = Chef.query.filter_by(customerid=cid).first()
-    return render_template("chefs/view_chef_profile.html", title="View Profile", chef=chefid)
-
 
 @app.route('/chef-make-post/', methods=['GET', 'POST'])
 @login_required
 def chef_make_post():
-    cid = session.get('useronline')
-    chefid = Chef.query.filter_by(customerid=cid).first()
     if request.method == 'POST':
         title = request.form.get('title')
         content = request.form.get('content')
@@ -399,10 +386,14 @@ def chef_make_post():
             db.session.commit()
             return jsonify({"status": "success"})
         return jsonify({"status": "error"})
+    else:
+        cid = session.get('useronline')
+        chefid = Chef.query.filter_by(customerid=cid).first()
     return render_template("chefs/chef_make_post.html", title="Social Fields", chef=chefid)
 
 
 @app.route('/chef-timeline/')
+@login_required
 def chef_timeline():
     cid = session.get('useronline')
     chefid = Chef.query.filter_by(customerid=cid).first()
@@ -414,6 +405,7 @@ def chef_timeline():
 
 
 @app.route('/chef-product/')
+@login_required
 def chef_product():
     cid = session.get('useronline')
     chefid = Chef.query.filter_by(customerid=cid).first()
@@ -422,17 +414,10 @@ def chef_product():
 
 
 @app.route('/chef-delete-product/<int:pid>/')
+@login_required
 def chef_delete_product(pid):
     productid = Product.query.get_or_404(pid)
     productid.status='0'
     db.session.commit()
     return redirect(url_for('chef_product'))
-
-
-@app.route('/chef-view-count/<int:id>/', methods=['GET', 'POST'])
-def chef_profile_view_count(id):
-    chef = Chef.query.get_or_404(id)
-    chef.view_count += 1
-    db.session.commit()
-    return jsonify({"status": "success"})
 

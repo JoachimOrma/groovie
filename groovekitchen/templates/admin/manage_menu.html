@@ -1,0 +1,162 @@
+{% extends 'utilities/layout.html' %}
+
+{% block search %}
+    <div class="py-md-3"></div>
+{% endblock search %}
+{% block hero %}{% endblock hero %}
+
+{% block main %}
+    <div class="container-xxl pb-5">
+        <div class="container">
+            <div class="row justify-content-evenly">
+                <div class="col-md-6 border p-4 shadow">
+                    <h3 class="text-decoration-underline">Create Menu</h3>
+                    <form action="{{url_for('create_menu')}}" method="post" enctype="multipart/form-data" id="createMenuForm">
+                        <input type="hidden" name="csrf_token" value="{{csrf_token()}}" />
+                        <div class="my-4">
+                            <input type="file" name="photo" id="photo" style="display:none">
+                            <label for="photo" class="d-flex" title="Select an image to represent menu.">
+                                <i class="fas fa-photo-film" style="font-size: 2rem"></i>
+                                <span class="ms-3 fst-italic fw-bold">Selet an image for the menu</span>
+                            </label>
+                        </div>
+                        <div class="hidden photo-preview mb-3">
+                            <img src="" alt="..." height="80" class="photo">
+                        </div>
+                        
+                        <div class="col-md-12">
+                            <div class="form-floating mb-3">
+                                <input type="text" name="menuName" id="menuName" class="form-control noround" placeholder="Name for the menu" required/>
+                                <label for="name">Name for the menu</label>
+                            </div>
+                        </div>
+                        <div>
+                            <button type="button" class="btn btn-primary btn-sm" id="create-menu-button">Create</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="col-md-5 p-4 border shadow">
+                    <h3 class="text-decoration-underline">Create Menu Items</h3>
+                    <form action="{{url_for('create_menu_item')}}" method="post" id="menuItemForm">
+                        <input type="hidden" name="csrf_token" value="{{csrf_token()}}">
+                        <div class="col-md-12">
+                           <select name="menu" id="menu" class="form-select mb-3 py-3">
+                               <option value="">Select Menu</option>
+                                {% for menu in menu_list %}
+                                <option value="{{menu.id}}">{{menu.name}}</option>
+                                {% endfor %}
+                           </select>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="form-floating mb-3">
+                                <input type="text" name="menuItem" id="menuItem" class="form-control noround" placeholder="Menu Item Name"/>
+                                <label for="menuItem">Menu Item Name</label>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-md-end">
+                            <button type="button" class="btn btn-dark btn-sm" id="create-menuItem-button">Create</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>   
+    </div>
+    <div class="row">
+        <div class="col-md-5 p-4 border shadow">
+            <h3 class="text-decoration-underline">Create Speciality</h3>
+            <form action="{{url_for('create_speciality')}}" method="post" id="specialityForm">
+                <input type="hidden" name="csrf_token" value="{{csrf_token()}}">
+                <div class="col-md-12">
+                    <div class="form-floating mb-3">
+                        <input type="text" name="speciality" id="speciality" class="form-control noround" placeholder="Speciality Name" required/>
+                        <label for="speciality">Speciality Name</label>
+                    </div>
+                </div>
+                <div class="d-flex">
+                    <button type="button" class="btn btn-primary btn-sm" id="create-speciality-button">Create</button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock main %}
+{% block customJS %}
+<script>
+    function readURL(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                $('.photo').attr('src', e.target.result);
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+    const fileInput = document.getElementById('photo');
+    fileInput.addEventListener('change', function() {
+        const file = fileInput.files[0];
+                 
+        readURL(this);
+        $('.photo-preview').removeClass('hidden').addClass('d-flex justify-content-end');
+    });
+
+    $('#create-menu-button').click(function(){
+        const myForm = document.querySelector('#createMenuForm');
+        const formData = new FormData(myForm);
+        $.ajax({
+            url: "/create-menu/",
+            type: "POST",
+            processData: false,
+            contentType: false,
+            data: formData,
+            success: function(response){
+                if (response.status == "success"){
+                    alert(response.status);
+                    window.location.href='/manage-menu/';
+                } else {
+                    alert(response.status);
+                }
+            }
+        });
+    });
+
+    $('#create-speciality-button').click(function(){
+        const myForm = document.querySelector('#specialityForm');
+        const formData = new FormData(myForm);
+        $.ajax({
+            url: "/create-speciality/",
+            type: "POST",
+            processData: false,
+            contentType: false,
+            data: formData,
+            success: function(response){
+                if (response.status == "success"){
+                    alert(response.status);
+                    $('#speciality').val("");
+                } else {
+                    alert(response.status);
+                }
+            }
+        });
+    });
+
+    $('#create-menuItem-button').click(function(){
+        const myForm = document.querySelector('#menuItemForm');
+        const formData = new FormData(myForm);
+        $.ajax({
+            url: "/create-menu-item/",
+            type: "POST",
+            processData: false,
+            contentType: false,
+            data: formData,
+            success: function(response){
+                if (response.status == "success"){
+                    alert(response.status);
+                    window.location.href='/manage-menu/';
+                } else {
+                    alert(response.status);
+                }
+            }
+        });
+    });
+    
+</script>
+{% endblock customJS %}

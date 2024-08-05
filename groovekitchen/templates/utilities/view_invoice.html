@@ -1,0 +1,66 @@
+{% extends "utilities/layout.html" %}
+{% block banner %}
+<div class="container-xxl py-3 bg-dark hero-header mb-3 d-none d-lg-block">
+    <div class="container text-center my-3 pt-3 pb-3">
+        <nav aria-label="breadcrumb">
+
+        </nav>
+    </div>
+</div>
+{% endblock banner %}
+
+{% block main %}
+    <div class="container">
+        <div class="printable">
+            <h2 class="text-center mt-4">GROOVIE KITCHEN</h2>
+            <p class="fs-4 text-center">Invoice</p>
+            <hr />
+            <div class="vstack mb-3">
+                <table class="table">
+                    <tr>
+                        <th>#</th>
+                        <th>Product Name</th>
+                        <th>Qunatity</th>
+                        <th>Price (NGN)</th>
+                    </tr>
+                    {% for product in product_list %}
+                    <tr>
+                        <td>{{loop.index}}</td>
+                        <td>{{product.name}}</td>
+                        <td>{{product.quantity}}</td>
+                        <td>{{product.price}}</td>
+                    </tr>
+                    {% endfor %}
+                    <tr class="text-dark h6">
+                        <td>TOTAL</td>
+                        <td></td>
+                        <td></td>
+                        <td>{{payment_deets.amount}}</td>
+                    </tr>
+                </table> 
+            </div>
+            <div class="vstack pt-4">
+                <h6><i class="fa fa-circle-check"></i> Invoice Quantity: {{quantity}} </h6>
+                <p>Thanks for your patronage, see you again soon.</p>
+            </div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="printInvoice()" style="text-transform: capitalize;">Print Invoice</button>
+    </div>
+{% endblock main %}
+
+{% block footer %}
+{% endblock footer %}
+
+{% block customJS %}
+<script>
+    function printInvoice() {
+        var printContent = document.querySelector('.printable');
+        var originalContent = document.body.innerHTML;
+        document.body.innerHTML = printContent.outerHTML;
+        window.print();
+        document.body.innerHTML = originalContent;
+
+        window.location.href='/order-history/';
+    }
+</script>
+{% endblock customJS %}

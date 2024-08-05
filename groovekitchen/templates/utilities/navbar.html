@@ -6,57 +6,68 @@
         </span>
     </a>
 
-     <!-- Cart logo for small screen -->
+     <!-- shopping cart logo -->
      <a href="{% if session.get('useronline') != None %}{{url_for('cart_details')}}{% else %}#{% endif %}" class="nav-item nav-link d-md-none" style="position:relative;">
         <i class="fas fa-shopping-cart text-light" style="font-size: 1.5rem"></i>
         <span style="position: absolute; right: 8px; font-size: small; border-radius: 10px" class="text-light px-2 cart_items_count bg-primary">{{number_of_cart_items}}</span>
     </a>
-     <!-- end of cart logo for small screen -->
+     <!-- Shopping cart logo -->
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
         <span class="fa fa-bars"></span>
     </button>
     <div class="collapse navbar-collapse" id="navbarCollapse">
         <div class="navbar-nav py-0 pe-4 ms-auto">
-            <a href="{{url_for('social_feed')}}" class="nav-item nav-link {% if page=='social-feed' %}active{% endif %} me-3">Social Feed</a>
+            <a href="{{url_for('community')}}" class="nav-item nav-link {% if page=='community' %}active{% endif %} me-3">Community</a>
             <div class="nav-item dropdown">
                 <a href="#" class="nav-link dropdown-toggle {% if page=='top_listings' or page=='fast_orders' or page=='restaurants' or page=='private_chefs' or page=='catering' %}active{% endif %} me-3" data-bs-toggle="dropdown">Menu</a>
                 <div class="dropdown-menu m-0">
-                    <a href="{{url_for('fast_orders')}}" class="dropdown-item {% if page=='fast_orders' %} active{% endif %}">Fast Orders</a>
-                    <a href="{{url_for('top_listings')}}" class="dropdown-item {% if page=='top-listing' %} active{% endif %}">Top Listings</a>
                     <a href="{{url_for('community_agents')}}" class="dropdown-item {% if page=='community_agent' %} active{% endif %}">Community Agents</a>
                     <a href="{{url_for('professional_chefs')}}" class="dropdown-item {% if page=='professional_chefs' %} active{% endif %}">Chefs</a>
-                    <a href="{{url_for('catering_services')}}" class="dropdown-item {% if page=='catering' %} active{% endif %}">Catering Services</a>
                     <a href="{{url_for('restaurants')}}" class="dropdown-item {% if page=='restaurants' %} active{% endif %}">Brands</a>
+                    <a href="{{url_for('catering_services')}}" class="dropdown-item {% if page=='catering' %} active{% endif %}">Catering Services</a>
+                    <a href="{{url_for('top_listings')}}" class="dropdown-item {% if page=='top-listing' %} active{% endif %}">Top Listings</a>
+                    <a href="{{url_for('fast_orders')}}" class="dropdown-item {% if page=='fast_orders' %} active{% endif %}">Load Orders</a>
                 </div>
             </div>
             {% if session.get('useronline') != None %}
-
-                <div class="nav-item dropdown">
-                    <a href="#" class="nav-link dropdown-toggle me-3" data-bs-toggle="dropdown">Careers</a>
-                    <div class="dropdown-menu m-0">
-                        <a href="{{url_for('community_agent_career')}}" class="dropdown-item">Community Agent</a>
-                        <a href="{{url_for('chef_career')}}" class="dropdown-item">Chef</a>
-                        <a href="{{url_for('caterer_career')}}" class="dropdown-item">Caterer & Event Planner</a>
-                        <a href="#" class="dropdown-item">Brands</a>
-                    </div>
+            <span class="dropdown d-md-none">
+                <a href="#" class="text-dark" data-bs-toggle="dropdown" aria-expanded="false"><i class="fa fa-dumbbell"></i> Careers</a>
+                <ul class="dropdown-menu bg-light">
+                    <li><a href="{{ url_for('community_agent_career') }}" class="dropdown-item">Community Agent</a></li>
+                    <li><a href="{{ url_for('chef_career') }}" class="dropdown-item">Chef</a></li>
+                    <li><a href="#" class="dropdown-item">Brands</a></li>
+                    <li><a href="{{ url_for('caterer_career') }}" class="dropdown-item">Caterer & Event Planner</a></li>
+                </ul>
+            </span>
+            <div class="nav-item dropdown">
+                <a href="#" class="nav-link dropdown-toggle me-3" data-bs-toggle="dropdown"><i class="far fa-circle-user" style="font-size: 1.4rem;"></i></a>
+                <div class="dropdown-menu m-0">
+                    {% if session.get('useronline') and customer.customer_type == 'chef' %}
+                    <a href="{{ url_for('chef_dashboard') }}" class="dropdown-item"><i class="fa fa-layer-group"></i> Dashboard</a>
+                    {% elif session.get('useronline') and customer.customer_type == 'caterer' %}
+                    <a href="{{ url_for('caterer_dashboard') }}" class="dropdown-item"><i class="fa fa-layer-group"></i> Dashboard</a>
+                    {% elif session.get('useronline') and customer.customer_type == 'agent' %}
+                    <a href="{{ url_for('community_agent_dashboard') }}" class="dropdown-item"><i class="fa fa-layer-group"></i> Dashboard</a>
+                    {% endif %}
+                    
+                    <!-- Nested Dropdown -->
+                    <span class="dropdown-item dropdown dropend d-none d-md-block">
+                        <a href="#" class="text-dark" data-bs-toggle="dropdown" aria-expanded="false"><i class="fa fa-dumbbell"></i> Careers</a>
+                        <ul class="dropdown-menu bg-light-subtle">
+                            <li><a href="{{ url_for('community_agent_career') }}" class="dropdown-item">Community Agent</a></li>
+                            <li><a href="{{ url_for('chef_career') }}" class="dropdown-item">Chef</a></li>
+                            <li><a href="#" class="dropdown-item">Brands</a></li>
+                            <li><a href="{{ url_for('caterer_career') }}" class="dropdown-item">Caterer & Event Planner</a></li>
+                        </ul>
+                    </span>
+                    <a href="{{ url_for('order_history') }}" class="dropdown-item"><i class="fas fa-circle-info"></i> My Orders</a>
+                    <a href="{{ url_for('wishlist') }}" class="dropdown-item"><i class="fas fa-heart"></i> My Wishlist</a>
+                    <a href="{{ url_for('payment_history') }}" class="dropdown-item"><i class="fas fa-money-bills"></i> Payment History</a>
+                    <a href="{{ url_for('logout') }}" class="dropdown-item text-danger"><i class="fa-solid fa-right-to-bracket"></i> Logout</a>
                 </div>
-                <div class="nav-item dropdown">
-                    <a href="#" class="nav-link dropdown-toggle me-3" data-bs-toggle="dropdown"><i class="far fa-circle-user" style="font-size: 1.4rem;"></i></a>
-                    <div class="dropdown-menu m-0">
-                        {% if session.get('useronline') and customer.customer_type == 'chef' %}
-                        <a href="{{url_for('chef_dashboard')}}" class="dropdown-item"><i class="fa fa-layer-group"></i> Dashboard</a>
-                        {% elif session.get('useronline') and customer.customer_type == 'caterer' %}
-                        <a href="{{url_for('caterer_dashboard')}}" class="dropdown-item"><i class="fa fa-layer-group"></i> Dashboard</a>
-                        {% elif session.get('useronline') and customer.customer_type == 'agent' %}
-                        <a href="{{url_for('community_agent_dashboard')}}" class="dropdown-item"><i class="fa fa-layer-group"></i> Dashboard</a>
-                        {% endif %}
-                        <a href="{{url_for('order_history')}}" class="dropdown-item"><i class="fas fa-circle-info"></i> My Orders</a>
-                        <a href="{{url_for('wishlist')}}" class="dropdown-item"><i class="fas fa-heart"></i> My Wishlist </a>
-                        <a href="{{url_for('payment_history')}}" class="dropdown-item"><i class="fas fa-money-bills"></i> Payment History</a>
-                        <a href="{{url_for('logout')}}" class="dropdown-item text-danger"><i class="fa-solid fa-right-to-bracket"></i> Logout</a>
-                    </div>
-                </div>
+            </div>
+            
                 <a href="{{url_for('cart_details')}}" class="nav-item nav-link d-none d-md-inline-block me-3" style="position:relative;">
                     <i class="fas fa-shopping-cart" style="font-size: 1.5rem"></i>
                     <span style="position: absolute; right: -2px; font-size: x-small; border-radius: 10px" class="text-light px-2 cart_items_count bg-primary">{{number_of_cart_items}}</span>

@@ -3,7 +3,7 @@
 {% block main %}
 
     <h2 class="text-center py-3 bg-light" id="sub-title"></h2>
-    <div class="row g-3 g-md-4 justify-content-center justify-content-md-start mx-1 mx-lg-0" id="product-container">
+    <div class="row g-3 g-md-4 mx-1 mx-lg-0" id="product-container">
         
     </div>
 
@@ -38,20 +38,18 @@
                         let cartButtonHtml = '';
 
                         // Wishlist html based on the users wishlsit details
-                        if (useronline) {
-                            if (product.wishlist_deets) {
+                        if (useronline != 'None') {
+                            if (product.onWishlist) {
                                 wishlistHtml += `
-                                    <a type="button" class="d-flex justify-content-center mt-1 wishlist">
-                                        <i class="fa-solid fa-heart fs-5 wishlistIcon"></i>
+                                    <a type="button" class="d-flex justify-content-center mt-1 wishlist" data-product-id="${product.id}">
+                                        <i class="fa-solid fa-heart wishlistIcon fs-5"></i>
                                     </a>
-                                    <input type="hidden" name="cartItem" class="cartItem" value="${product.id}">
                                 `;
                             } else {
                                 wishlistHtml += `
-                                    <a type="button" class="d-flex justify-content-center mt-1 nd wishlist">
-                                        <i class="fa-regular fa-heart fs-5 wishlistIcon"></i>
+                                    <a type="button" class="d-flex justify-content-center mt-1 wishlist" data-product-id="${product.id}">
+                                        <i class="fa-regular fa-heart wishlistIcon fs-5"></i>
                                     </a>
-                                    <input type="hidden" name="cartItem" class="cartItem" value="${product.id}">
                                 `;
                             }
                         } else {
@@ -64,8 +62,8 @@
                         }
 
                         // Cart button based on users online status
-                        if (useronline){
-                            cartButtonHtml += `<a type="button" class="text-body add-to-cart"><i class="fa fa-shopping-cart text-primary me-2"></i>Add to cart</a>`;
+                        if (useronline != 'None'){
+                            cartButtonHtml += `<a type="button" class="text-body add-to-cart" data-product-id="${product.id}"><i class="fa fa-shopping-cart text-primary me-2"></i>Add to cart</a>`;
                         } else {
                             cartButtonHtml += `<a type="button" class="text-body" data-bs-toggle="modal" data-bs-target="#loginModal"><i class="fa fa-shopping-cart text-primary me-2"></i>Add to cart</a>`;
                         }
@@ -75,10 +73,12 @@
                             productHtml += `
                                 <div class="col-lg-3 col-md-4 col-6">
                                     <div class="product-item">
-                                        <div class="position-relative bg-light overflow-hidden">
-                                            <img class="w-100" src="/static/products/${images[0]}" alt="..." height="170" title="Click image to view product details">
-                                            <input type="hidden" name="cartItem" class="cartItem" value="${product.id}">
-                                        </div>
+                                        <a href="/product-details/${product.id}/" class="text-decoration-none">
+                                            <div class="position-relative bg-light overflow-hidden">
+                                                <img class="w-100" src="/static/products/${images[0]}" alt="..." height="170" title="Click image to view product details">
+                                                <input type="hidden" name="cartItem" class="cartItem" value="${product.id}">
+                                            </div>
+                                        </a>
                                          <div class="text-center p-2">
                                             <a class="d-block text-dark mb-2">${product.name}</a>
                                             <span class="text-primary text-center">
@@ -99,6 +99,18 @@
                     });
                     $("#product-container").append(productHtml);
                     $("#sub-title").html("Featured Products");
+
+                    // Attach event listeners after content is added
+                    $('.add-to-cart').on('click', function() {
+                        const productId = $(this).data('product-id');
+                        addToCart(productId);
+                       
+                    });
+                    // Attach event listeners to wishlist
+                    $('.wishlist').on('click', function() {
+                        const productId = $(this).data('product-id');
+                        addToWishlist(productId);
+                    });
     
                 } else if (response.status == "not-found"){
                     $("#product-container").html("<p class='d-flex justify-content-center'>No products found.</p>");
@@ -110,75 +122,76 @@
         });
     }
 
-     //Handling searching for caterers, by location, name, and specialities
-     $('.search-button').click(function(){
-        const searchInput = $('#search-box').val();
+    //Handling searching for caterers, by location, name, and specialities
+    function handleSearch() {
+        const searchInput = document.getElementById('search-input').value.trim();
+        const useronline = "{{ session.get('useronline') }}";
+        const csrfToken = "{{csrf_token()}}"; // Ensure CSRF token is properly handled
+    
         $.ajax({
             url: "/top-listing/",
             type: "POST",
-            data: {"csrf_token": "{{csrf_token()}}", "searchInput": searchInput},
+            dataType: 'json',
+            data: {
+                "csrf_token": csrfToken,
+                "searchInput": searchInput
+            },
             success: function(response) {
-                if (response.status == "success") {
-                    const useronline = "{{session.get('useronline')}}"; 
+                if (response.status === "success") {
                     let productHtml = "";
                     $("#product-container").empty();
     
                     response.product_list.forEach(product => {
-                        // Determine online status icon
                         let wishlistHtml = '';
                         let cartButtonHtml = '';
-
-                        // Wishlist html based on the users wishlsit details
-                        if (useronline) {
-                            if (product.wishlist_deets) {
+    
+                        if (useronline != 'None') {
+                            if (product.onWishlist) {
                                 wishlistHtml += `
-                                    <a type="button" class="d-flex justify-content-center mt-1 wishlist">
-                                        <i class="fa-solid fa-heart fs-5 wishlistIcon"></i>
+                                    <a type="button" class="d-flex justify-content-center mt-1 wishlist" data-product-id="${product.id}">
+                                        <i class="fa-solid fa-heart wishlistIcon fs-5"></i>
                                     </a>
-                                    <input type="hidden" name="cartItem" class="cartItem" value="${product.id}">
                                 `;
                             } else {
                                 wishlistHtml += `
-                                    <a type="button" class="d-flex justify-content-center mt-1 wishlist">
-                                        <i class="fa-regular fa-heart fs-5 wishlistIcon"></i>
+                                    <a type="button" class="d-flex justify-content-center mt-1 wishlist" data-product-id="${product.id}">
+                                        <i class="fa-regular fa-heart wishlistIcon fs-5"></i>
                                     </a>
-                                    <input type="hidden" name="cartItem" class="cartItem" value="${product.id}">
                                 `;
                             }
                         } else {
-                            // User is not online
-                            wishlistHtml += `
+                            wishlistHtml = `
                                 <a type="button" class="d-flex justify-content-center mt-1 wishlist" data-bs-target="#loginModal" data-bs-toggle="modal">
                                     <i class="fa-regular fa-heart fs-5 wishlistIcon"></i>
                                 </a>
                             `;
                         }
-
+    
                         // Cart button based on users online status
-                        if (useronline){
-                            cartButtonHtml += `<a type="button" class="text-body add-to-cart"><i class="fa fa-shopping-cart text-primary me-2"></i>Add to cart</a>`;
+                        if (useronline != 'None'){
+                            cartButtonHtml += `<a type="button" class="text-body add-to-cart" data-product-id="${product.id}"><i class="fa fa-shopping-cart text-primary me-2"></i>Add to cart</a>`;
                         } else {
                             cartButtonHtml += `<a type="button" class="text-body" data-bs-toggle="modal" data-bs-target="#loginModal"><i class="fa fa-shopping-cart text-primary me-2"></i>Add to cart</a>`;
                         }
-
+    
                         const images = product.image.split('*');
                         if (images.length > 0) {
                             productHtml += `
                                 <div class="col-lg-3 col-md-4 col-6">
                                     <div class="product-item">
-                                        <div class="position-relative bg-light overflow-hidden">
-                                            <img class="w-100" src="/static/products/${images[0]}" alt="..." height="170" title="Click image to view product details">
-                                            <input type="hidden" name="cartItem" class="cartItem" value="${product.id}">
-                                        </div>
+                                        <a href="/product-details/${product.id}/" class="text-decoration-none">
+                                            <div class="position-relative bg-light overflow-hidden">
+                                                <img class="w-100" src="/static/products/${images[0]}" alt="..." height="170" title="Click image to view product details">
+                                            </div>
+                                        </a>
                                          <div class="text-center p-2">
                                             <a class="d-block text-dark mb-2" href="#">${product.name}</a>
                                             <span class="text-primary me-1 d-flex align-items-center position-relative">
                                                N${product.price}
                                             </span>
                                             <div class="d-flex mt-2">
-                                                <small class="w-75 text-center py-2 border"">
+                                                <small class="w-75 text-center py-2 border">
                                                     ${cartButtonHtml}
-                                                    <input type="hidden" name="cartItem" class="cartItem" value="${product.id}">
                                                 </small>
                                                 <small class="w-25 py-2 border">${wishlistHtml}</small>
                                             </div>      
@@ -186,50 +199,98 @@
                                     </div>
                                 </div>
                             `;
-                        };
+                        }
                     });
+    
                     $("#product-container").append(productHtml);
                     $("#sub-title").html("Featured Products");
+
+                    // Attach event listeners after content is added
+                    $('.add-to-cart').on('click', function() {
+                        const productId = $(this).data('product-id');
+                        addToCart(productId);
+                    });
+
+                    // Attach event listeners to wishlist
+                    $('.wishlist').on('click', function() {
+                        const productId = $(this).data('product-id');
+                        addToWishlist(productId);
+                    });
     
-                } else if (response.status == "not-found"){
+                } else if (response.status === "not-found") {
                     $("#product-container").html("<p class='d-flex justify-content-center'>No products found.</p>");
                 }
             },
             error: function(error) {
+                console.error("Search Error:", error);
                 $("#product-container").html("<p class='d-flex justify-content-center'>Something went wrong. Please, try again.</p>");
-            },   
+            }
         });
-    })
+    }
 
-   // Add products to cart
-    document.addEventListener('DOMContentLoaded', function() {
-        const addToCart = document.querySelectorAll('.add-to-cart');   
-        addToCart.forEach(link => {
-            link.addEventListener('click', function(event) {
-                event.preventDefault();
-                const cartItemInput = link.nextElementSibling;
-    
-                if (cartItemInput && cartItemInput.classList.contains('cartItem')) {
-                    const cart_id = cartItemInput.value;
-                    $.ajax({
-                        url: `/add-to-cart/${cart_id}/`,
-                        type: "POST",
-                        data: {"csrf_token": "{{csrf_token()}}"},
-                        success: function(response){
-                            if (response.status == 'success'){
-                                swal({
-                                    text: "Product added to cart successfully.",
-                                    icon: "success",
-                                    buttons: false,
-                                    timer: 2000,
-                                });
-                            }
-                        },
+    function addToCart(productId) {   
+        $.ajax({
+            url: `/add-to-cart/${productId}/`,
+            type: "POST",
+            data: {"csrf_token": "{{csrf_token()}}" },
+            success: function(response) {
+                if (response.status === "success") {
+                    swal({
+                        icon: 'success',
+                        text: 'Product added to cart',
+                        timer: 2000,
+                        buttons: false,
                     })
+                    $('.cart_items_count').text(response.number_of_cart_items);
+                } else {
+                    alert("Failed to add product to cart.");
                 }
-            })
-        })
-    })
+            },
+            error: function(error) {
+                alert("Something went wrong. Please try again.");
+            }
+        });
+    }
+
+    //Add and remove product from wishlist
+    const addToWishlist = (productId) => {   
+        const isRegular = $('.wishlistIcon').hasClass('fa-regular');
+        let actionURL;
+        if (isRegular) {
+            actionURL = `/add-to-wishlist/${productId}/`;
+        } else {
+            actionURL = `/remove-from-wishlist/${productId}/`;
+        }
+        $.ajax({
+            url: actionURL,
+            type: 'POST',
+            data: {"csrf_token": "{{csrf_token()}}" },
+            success: function(response){
+                if (response.status === 'success') {
+                    $('.wishlistIcon').removeClass('fa-regular');
+                    $('.wishlistIcon').addClass('fa-solid');
+                    $('.wishlist_count').text(response.number_of_wishlist_item);
+                    swal({
+                        text: response.message,
+                        icon: "success",
+                        buttons: false,
+                        timer: 2000,
+                    });
+                }
+            } 
+        });
+    };
+        
+    $('.search-button').on('click', function() {
+        handleSearch();
+    });
+    
+    $('#search-input').on('keypress', function(event) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            handleSearch();
+        }
+    });
 
     //Remove product from cart
     document.addEventListener('DOMContentLoaded', function() {
@@ -253,77 +314,6 @@
             })
         })
     })
-
-    //View Product Details
-    document.addEventListener('DOMContentLoaded', function() {
-        const addToCart = document.querySelectorAll('.product-details');   
-        addToCart.forEach(link => {
-            link.addEventListener('click', function(event) {
-                event.preventDefault();
-                const cartItemInput = link.nextElementSibling;
-                
-                if (cartItemInput && cartItemInput.classList.contains('cartItem')) {
-                    const cart_id = cartItemInput.value;
-                    $.ajax({
-                        url: `/product-details/${cart_id}/`,
-                        type: "POST",
-                        data: {"csrf_token": "{{csrf_token()}}"},
-                        success: function(response){
-                            window.location.href=`/product-details/${cart_id}/`
-                        }
-                    })
-                }
-            })
-        })
-    })
-
-    //Add and remove product from wishlist
-    document.addEventListener('DOMContentLoaded', function() {
-        const wishlistButtons = document.querySelectorAll('.wishlist');
-    
-        wishlistButtons.forEach(button => {
-            button.addEventListener('click', function(event) {
-                event.preventDefault();
-    
-                // Find the relevant elements
-                const icon = button.querySelector('.wishlistIcon');
-                const cartItemInput = button.nextElementSibling;
-    
-                const cartId = cartItemInput.value;
-                const isRegular = icon.classList.contains('fa-regular');
-    
-                let actionURL;
-                if (isRegular) {
-                    actionURL = `/add-to-wishlist/${cartId}/`;
-                } else {
-                    actionURL = `/remove-from-wishlist/${cartId}/`;
-                }
-    
-                // Perform AJAX request
-                $.ajax({
-                    url: actionURL,
-                    type: 'POST',
-                    data: {"csrf_token": "{{csrf_token()}}" },
-                    success: function(response){
-                        if (response.status === 'success') {
-                            // Toggle icon class
-                            icon.classList.toggle('fa-regular');
-                            icon.classList.toggle('fa-solid');
-                            $('.wishlist_count').text(response.number_of_wishlist_item);
-                            swal({
-                                text: response.message,
-                                icon: "success",
-                                buttons: false,
-                                timer: 2000,
-                            });
-                        }
-                    } 
-                });
-            });
-        })
-    });
-
-
      
 </script>
 {% endblock customJS %}

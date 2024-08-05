@@ -17,4 +17,4 @@ def create_app():
 
 
 app = create_app()
-from groovekitchen import customer_route, routes, agent_route, chef_route, caterer_route
+from groovekitchen import customer_route, routes, agent_route, chef_route, caterer_route, admin_route

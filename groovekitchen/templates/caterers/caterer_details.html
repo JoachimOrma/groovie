@@ -23,7 +23,7 @@
             </div>
             <div class="col-md-6 mt-3 d-flex flex-column ms-5 ms-md-0">
                 <span class="d-flex h6">
-                    {% if session.get('useronline') %} 
+                    {% if session.get('useronline') == caterer.customerid %} 
                         <i class="fa-solid fa-circle online me-2" style="color: green; font-size: x-small;"></i> 
                     {% else %}
                     <i class="fa-solid fa-circle me-2" style="color: grey; font-size: x-small;"></i> 
@@ -121,36 +121,10 @@
             </div>
         </div>
         {% if caterers | length > 1 %}
-            <div class="row pt-5 pb-3">
-                <h2 class="text-center">Other Professional Caterers</h2>
-                <div class="tab-content mb-5">
-                <div class="tab-pane fade show p-0 active">
-                    <div class="row g-4">
-                        {% for baker in caterers %}
-                            {% if baker.id != caterer.id %}
-                            <div class="col-lg-3 col-md-6 col-11 wow fadeInUp card-col" data-wow-delay="0.1s">
-                            <div class="card caterer-card">
-                                <input type="hidden" name="catererId" class="caterer-input" value="{{caterer.id}}" />
-                                <img src="/static/photos/{{ baker.dp }}" alt="..." height="150" style="object-fit: cover;">
-                                <div class="footer p-2 d-flex flex-column text-center" style="font-size: small;">
-                                    {% if session.get('useronline') %} 
-                                        <i class="fa-solid fa-circle online me-2" style="color: green; font-size: x-small;"></i> 
-                                    {% else %}
-                                    <i class="fa-solid fa-circle me-2" style="color: grey; font-size: x-small;"></i> 
-                                    {% endif %}
-                                    {{ baker.firstname }} {{baker.lastname}}
-                                    {% if caterer.verification == 'verified' %}
-                                        <img src="/static/photos/verify.png" width="20" class="ms-1"/>
-                                    {% endif %}
-                                    <span class="card-text my-2" style="background: lavender; border-radius: 4px"> {{ baker.specialities }}</span>
-                                    <span class="text-muted px-2" style="font-style: italic;"><i class="fas fa-location-dot text-warning"></i> {{baker.city}}, {{ baker.state }} State</span>
-                                </div>
-                            </div>
-                            </div>
-                            {% endif %}
-                        {% endfor %}
-                    </div>
-                    </div>
+            <h2 class="py-3 mb-5 bg-light" id="sub-title"></h2>
+            <div class="container">
+                <div class="row g-4" id="caterer-container">
+        
                 </div>
             </div>
         {% endif %}
@@ -161,19 +135,60 @@
 {% endblock footer %}
 {% block customJS %}
 <script>
-
-    const catererCards = document.querySelectorAll('.caterer-card');
-
-    catererCards.forEach(card => {
-        card.addEventListener('click', () => {
-            const input = card.querySelector('.caterer-input');
-            
-            if (input) {
-                const catererId = input.value;
-                window.location.replace(`/caterer-details/${catererId}/`);
+    //Fetching and displaying all caterers from the database
+    document.body.onload = function(){
+        $.getJSON({
+            url: "/get-caterers/",
+            success: function(response) {
+                if (response.status == "success") {
+                    const useronline = "{{session.get('useronline')}}"; 
+                    const current_caterer = "{{caterer.id}}";
+                    let catererHtml = "";
+                    $("#caterer-container").empty();
+    
+                    response.caterer_list.forEach(caterer => {
+                        // Determine online status icon
+                        let onlineStatusHtml = '';
+                        if (useronline == caterer.customerid) {
+                            onlineStatusHtml = '<i class="fa-solid fa-circle online me-2" style="color: green; font-size: x-small;"></i>';
+                        } else {
+                            onlineStatusHtml = '<i class="fa-solid fa-circle me-2" style="color: grey; font-size: x-small;"></i>';
+                        }
+                        // Using the first letter of their lastname
+                        const lastname = caterer.lastname ? caterer.lastname[0] : '';
+                        if (current_caterer != caterer.id){
+                            catererHtml += `
+                                <div class="col-lg-3 col-md-4 col-6">
+                                    <a href="/caterer-details/${caterer.id}/" class="text-decoration-none">
+                                        <div class="card">
+                                            <input type="hidden" class="caterer-input" name="catererId" value="${caterer.id}" />
+                                            <img src="/static/photos/${caterer.dp}" alt="${caterer.firstname} ${lastname}'s profile picture" height="210" style="object-fit: cover;">
+                                            <div class="footer p-2 d-flex flex-column text-center" style="font-size: small;">
+                                                <span class="h6 d-flex align-items-center justify-content-center">
+                                                ${onlineStatusHtml}
+                                                ${caterer.firstname} ${lastname}.
+                                                <img src="/static/photos/verify.png" width="16" class="ms-1" alt="Verified"/>
+                                                </span>
+                                                <span class="card-text text-format" style="background: lavender; border-radius: 4px"> ${caterer.specialities}</span>
+                                                <span class="text-muted px-2" style="font-style: italic;"><i class="fas fa-location-dot text-warning"></i> ${caterer.city}, ${caterer.state} State</span>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </div>
+                            `;
+                        }
+                    });
+                    $("#caterer-container").append(catererHtml);
+                    $("#sub-title").html("Caterers & Event Planners");
+                } else if (response.status == "not-found"){
+                    $("#caterer-container").html("<p class='d-flex justify-content-center'>No caterers found.</p>");
+                }
+            },
+            error: function(error) {
+                $("#caterer-container").html("<p class='d-flex justify-content-center'>Something went wrong. Please, try again.</p>");
             }
-        });   
-    });
+        });
+    }
 
     $('#book-button').click(function(e){
         e.preventDefault();

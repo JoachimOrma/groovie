@@ -4,21 +4,18 @@ from flask import render_template, request, redirect, url_for, flash, session, j
 from sqlalchemy.orm import joinedload
 from sqlalchemy import or_
 from groovekitchen import app
-from groovekitchen.models import db, Customer, Cart, Chef, Product, Wishlist, CommunityAgent
+from groovekitchen.models import db, Customer, Cart, Chef, Product, Wishlist, CommunityAgent, Speciality
 
 @app.route('/restaurants/')
 def restaurants():
-    if session.get('useronline'):
-        cid = session.get('useronline')
+    cid = session.get('useronline')
+    text = "Find best brands of restaurants around you."
+    search = "E.g: KFC, Ojota"
+    if cid:
         customer = Customer.query.get_or_404(cid)
-        cart_items = Cart.query.filter_by(customerid=customer.id).all()
-        number_of_cart_items = len(cart_items)
-        wishlist_items = Wishlist.query.filter_by(customerid=customer.id).all()
-        number_of_wishlist_item = len(wishlist_items)
-    else:
-        number_of_cart_items = 0
-        number_of_wishlist_item = 0
-        customer = None
+        number_of_cart_items = Cart.query.filter_by(customerid=customer.id).count()
+    customer = None
+    number_of_cart_items = 0
     restaurants = [
         {"name": 'Peaky Blinders', "image": 'restaurant1.jpg', "rating": 4.5},
         {"name": 'House of El', "image": 'restaurant2.jpg', "rating": 4.0},
@@ -30,38 +27,29 @@ def restaurants():
         {"name": 'Mushin Shin Shin', "image": 'restaurant8.jpg', "rating": 5.0},
         {"name": 'Island of Biu', "image": 'restaurant9.jpg', "rating": 4.6},
     ]
-    return render_template('restaurants/restaurant.html', restaurants=restaurants, title='Restaurants', number_of_wishlist_item=number_of_wishlist_item,
-                           page='restaurants', number_of_cart_items=number_of_cart_items, customer=customer)
-
-@app.route('/add_product/', methods=['GET', 'POST'])
-def add_product():
-    if request.method == 'POST':
-        product_name = request.form.get('product_name')
-        product_price = request.form.get('product_price')
-        product_desc = request.form.get('product_desc')
-
-        # if product_name and product_desc and product_price:
-            # product = Product(product_name=product_name, product_price=product_price, product_description=product_desc)
-
-    return render_template('restaurants/add_product.html')
+    return render_template('restaurants/restaurant.html',
+        restaurants=restaurants,
+        text=text,
+        search=search,
+        title='Restaurants',
+        page='restaurants',
+        number_of_cart_items=number_of_cart_items,
+        customer=customer
+    )
 
 
 @app.route('/restaurant-details/')
 def restaurant_details():
-    if session.get('useronline'):
-        cid = session.get('useronline')
+    cid = session.get('useronline')
+    if cid:
         customer = Customer.query.get_or_404(cid)
-        cart_items = Cart.query.filter_by(customerid=customer.id).all()
-        wishlist_items = Wishlist.query.filter_by(customerid=customer.id).all()
-        number_of_cart_items = len(cart_items)
-        number_of_wishlist_item = len(wishlist_items)
-    else:
-        number_of_cart_items = 0
-        number_of_wishlist_item = 0
-        customer = None
-
-    # restaurantid = .query.filter(Carter.id == cid).first()
-    return render_template('restaurants/restaurant_details.html', title='Restaurant Details', number_of_cart_items=number_of_cart_items, customer=customer, number_of_wishlist_item=number_of_wishlist_item)
+        number_of_cart_items = Cart.query.filter_by(customerid=customer.id).all()
+    number_of_cart_items = 0
+    return render_template('restaurants/restaurant_details.html',
+        title='Restaurant Details',
+        number_of_cart_items=number_of_cart_items,
+        customer=customer
+    )
 
 
 @app.route('/get-agents/')
@@ -70,11 +58,12 @@ def get_agents():
     if agents:
         random.shuffle(agents)
         agent_list = [{
-            "id": agent.id,
+            "id": agent.id, 
+            "customerid": agent.customerid, 
             "firstname": agent.customer_deets.firstname,
             "lastname": agent.customer_deets.lastname,
             "dp": agent.customer_deets.dp,
-            "specialities": agent.specialities,
+            "speciality": agent.speciality_deets.name,
             "city": agent.city,
             "state": agent.state,
         } for agent in agents]
@@ -100,6 +89,7 @@ def community_agents():
             if agents:
                 agent_list = [{
                     "id": agent.id,
+                    "customerid": agent.customerid,
                     "firstname": agent.customer_deets.firstname,
                     "lastname": agent.customer_deets.lastname,
                     "dp": agent.customer_deets.dp,
@@ -114,55 +104,47 @@ def community_agents():
         else:
             return jsonify({"status": "error"})
     else:
-        if session.get('useronline'):
-            cid = session.get('useronline')
+        text = "Find community agents around you."
+        search = "E.g: Ediong or Rumokoro or Rice"
+        cid = session.get('useronline')
+        if cid:
             customer = Customer.query.get_or_404(cid)
-            cart_items = Cart.query.filter_by(customerid=customer.id).all()
-            wishlist_items = Wishlist.query.filter_by(customerid=customer.id).all()
-            number_of_wishlist_item = len(wishlist_items)
-            number_of_cart_items = len(cart_items)
-        else:
-            number_of_wishlist_item = 0
-            number_of_cart_items = 0
-            customer = None
-    return render_template('agents/agents.html', title='Community Agents', page='community_agent', customer=customer,
-                            number_of_wishlist_item=number_of_wishlist_item, number_of_cart_items=number_of_cart_items)
+            number_of_cart_items = Cart.query.filter_by(customerid=customer.id).count()
+        customer = None
+        number_of_cart_items = 0
+    return render_template('agents/agents.html',
+        text=text,
+        search=search,
+        title='Community Agents',
+        page='community_agent',
+        customer=customer,
+        number_of_cart_items=number_of_cart_items
+    )
 
 
 @app.route('/career-as-a-community-agent/')
 def community_agent_career():
     cid = session.get('useronline')
     customer = Customer.query.get_or_404(cid) or None
-    cart_items = Cart.query.filter_by(customerid=customer.id).all()
-    wishlist_items = Wishlist.query.filter_by(customerid=customer.id).all()
-    number_of_cart_items = len(cart_items) if cart_items else 0
-    number_of_wishlist_item = len(wishlist_items) if wishlist_items else 0
-
-    return render_template('agents/community_agent.html', title="Career as a community agent", customer=customer, number_of_wishlist_item=number_of_wishlist_item, number_of_cart_items=number_of_cart_items)
+    number_of_cart_items = Cart.query.filter_by(customerid=customer.id).count()
+    return render_template('agents/community_agent.html',
+        title="Career as a community agent",
+        customer=customer,
+        number_of_cart_items=number_of_cart_items
+    )
 
 
 @app.route('/register-as-a-community-agent/', methods=['GET', 'POST'])
 def community_agent_registration():
-    if session.get('useronline'):
-        cid = session.get('useronline')
-        customer = Customer.query.get_or_404(cid)
-        cart_items = Cart.query.filter_by(customerid=customer.id).all()
-        wishlist_items = Wishlist.query.filter_by(customerid=customer.id).all()
-        number_of_cart_items = len(cart_items)
-        number_of_wishlist_item = len(wishlist_items)
-    else:
-        number_of_cart_items = 0
-        number_of_wishlist_item = 0
-        customer = None
     if request.method == 'POST':
         state = request.form.get('state')
         address = request.form.get('address')
         city = request.form.get('city')
         phone = request.form.get('phone')
-        specialities = request.form.get('specialities')
+        speciality = request.form.get('specialities')
         photo_file = request.files['photo']
 
-        if photo_file and specialities and phone and city and state and address:
+        if photo_file and speciality and phone and city and state and address:
             file_name = photo_file.filename
             file_deets = file_name.split('.')
             ext = file_deets[-1]
@@ -175,7 +157,7 @@ def community_agent_registration():
                 state=state,
                 city=city,
                 status='1',
-                specialities=specialities,
+                specialityid=speciality,
                 address=address,
             )
             customer.dp=new_filename
@@ -186,15 +168,22 @@ def community_agent_registration():
             return jsonify({"status": "success"})
         else:
             return jsonify({"status": "error"})
-
-    return render_template('agents/community_agent_registration.html', title="Register as a community agent", customer=customer,
-                        number_of_cart_items=number_of_cart_items, number_of_wishlist_item=number_of_wishlist_item)
+    else:
+        specialities = Speciality.query.all()
+        cid = session.get('useronline')
+        if cid:
+            customer = Customer.query.get_or_404(cid)
+            number_of_cart_items = Cart.query.filter_by(customerid=customer.id).count()
+    return render_template('agents/community_agent_registration.html',
+        title="Register as a community agent",
+        customer=customer,
+        number_of_cart_items=number_of_cart_items,
+        specialities=specialities,
+    )
 
 
 @app.route('/community-agent-create-product/', methods=['GET', 'POST'])
 def community_agent_create_product():
-    cid = session.get('useronline')
-    agentid = CommunityAgent.query.filter_by(customerid=cid).first()
     if request.method == 'POST':
         product_name = request.form.get('product_name')
         price = request.form.get('price')
@@ -217,6 +206,9 @@ def community_agent_create_product():
             return jsonify({"status": "success"})
         else:
             return jsonify({"status": "error"})
+    else:
+        cid = session.get('useronline')
+        agentid = CommunityAgent.query.filter_by(customerid=cid).first()
     return render_template('agents/create_product.html', title="Create Product", agent=agentid)
 
 
@@ -229,9 +221,6 @@ def community_agent_dashboard():
 
 @app.route('/community-agent-profile-setting/', methods=['GET', 'POST'])
 def community_agent_profile_setting():
-    cid = session.get('useronline')
-    agentid = CommunityAgent.query.filter_by(customerid=cid).first()
-    customer = Customer.query.filter_by(id=agentid.customerid).first()
     if request.method == 'POST':
         firstname = request.form.get('firstname')
         lastname = request.form.get('lastname')
@@ -269,12 +258,14 @@ def community_agent_profile_setting():
             return jsonify({"page": "/agent-profile-setting/", "status": "success"})
         else:
             return jsonify({"message":"Please complete all data fields!", "status": "error"})
-
+    else:
+        cid = session.get('useronline')
+        agentid = CommunityAgent.query.filter_by(customerid=cid).first()
+        customer = Customer.query.filter_by(id=agentid.customerid).first()
     return render_template('agents/profile_setting.html', title="Profile Setting", agent=agentid)
 
 
 @app.route('/community-agent-logout/')
-# @login_required
 def community_agent_logout():
     if session.get('useronline'):
         session.pop('useronline')
@@ -282,7 +273,6 @@ def community_agent_logout():
     return redirect(url_for('login'))
 
 @app.route('/community-agent-profile/')
-# @login_required
 def community_agent_profile():
     cid = session.get('useronline')
     agentid = CommunityAgent.query.filter_by(customerid=cid).first()
@@ -293,10 +283,6 @@ def community_agent_profile():
 
 @app.route('/community-agent-account-setting/')
 def community_agent_account_setting():
-    vid = session.get('useronline')
-    customer = Customer.query.get_or_404(vid)
-    agentid = CommunityAgent.query.filter_by(customerid=vid).first()
-
     if request.method == 'POST':
         password = request.form.get('password')
         confirm_password = request.form.get('confirm_password')
@@ -311,32 +297,30 @@ def community_agent_account_setting():
                 return jsonify({"status": "unmatch_password"})
         else:
             return jsonify({"status": "error"})
+    else:
+        vid = session.get('useronline')
+        customer = Customer.query.get_or_404(vid)
+        agentid = CommunityAgent.query.filter_by(customerid=vid).first()
     return render_template('agents/account_setting.html', title="Account Setting", agent=agentid)
 
 
 @app.route('/category/<searchInput>/', methods=['GET', 'POST'])
 def categories(searchInput):
-    if session.get('useronline'):
-        cid = session.get('useronline')
+    search = "Search for meals, protiens, juices"
+    cid = session.get('useronline')
+    if cid:
         customer = Customer.query.get_or_404(cid)
-        cart_items = Cart.query.filter_by(customerid=customer.id).all()
-        wishlist_items = Wishlist.query.filter_by(customerid=customer.id).all()
-        number_of_cart_items = len(cart_items) if cart_items else 0
-        number_of_wishlist_item = len(wishlist_items) if wishlist_items else 0
-    else:
-        number_of_wishlist_item = 0
-        number_of_cart_items = 0
-        customer = None
-        cart_items = None
-
-    return render_template('agents/categories.html', url="/search-result/", title="Search result", customer=customer, searchInput=searchInput, number_of_wishlist_item=number_of_wishlist_item, number_of_cart_items=number_of_cart_items)
+        number_of_cart_items = Cart.query.filter_by(customerid=customer.id).count()
+    customer = None
+    number_of_cart_items = 0
+    return render_template('agents/categories.html', search=search, title="Search result", customer=customer, searchInput=searchInput, number_of_cart_items=number_of_cart_items)
 
 
 @app.route('/search-result/', methods=['POST'])
 def search_result():
     search_input = request.form.get('searchInput')
     if search_input:
-        products = Product.query.filter(Product.name.ilike(f'%{search_input}%')).all()
+        products = Product.query.filter(Product.name.ilike(f'%{search_input}%'), Product.status=='1').all()
         if products:
             random.shuffle(products)
             count_results = len(products)
@@ -363,29 +347,25 @@ def community_agent_product():
     return render_template('agents/products.html', title="My Products", agent=agentid, products=products)
 
 
-@app.route('/agent-view-count/<int:id>/', methods=['GET', 'POST'])
-def agent_profile_view_count(id):
-    agent = CommunityAgent.query.get_or_404(id)
-    agent.view_count += 1
-    db.session.commit()
-    return jsonify({"status": "success"})
-
-
 @app.route('/agent-details/<int:cid>/')
 def agent_details(cid):
     agentid = CommunityAgent.query.filter_by(id=cid).first()
     agents = CommunityAgent.query.all()
+    agentid.view_count += 1
+    db.session.commit()
     product = Product.query.filter_by(customerid=cid).first() or None
-    if session.get('useronline'):
-        cid = session.get('useronline')
+    cid = session.get('useronline')
+    if cid:
         customer = Customer.query.get_or_404(cid)
-        cart_items = Cart.query.filter_by(customerid=customer.id).all()
-        number_of_cart_items = len(cart_items)
-        wishlist_items = Wishlist.query.filter_by(customerid=customer.id).all()
-        number_of_wishlist_item = len(wishlist_items)
-    else:
-        number_of_cart_items = 0
-        number_of_wishlist_item = 0
-        customer = None
-    return render_template('agents/agent_details.html', title='Community Agent Details', agent=agentid, agents=agents, customer=customer, number_of_cart_items=number_of_cart_items, number_of_wishlist_item=number_of_wishlist_item, product=product)
+        number_of_cart_items = Cart.query.filter_by(customerid=customer.id).count()
+    number_of_cart_items = 0
+    customer = None
+    return render_template('agents/agent_details.html',
+        title='Community Agent Details',
+        agent=agentid,
+        agents=agents,
+        customer=customer,
+        number_of_cart_items=number_of_cart_items,
+        product=product
+    )
 

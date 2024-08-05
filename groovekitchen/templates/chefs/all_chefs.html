@@ -1,11 +1,11 @@
 {% extends 'utilities/layout.html' %}
     {% block main %}
     
-    <div class="container">
-        <h2 class="text-center py-3 mb-5 bg-light" id="sub-title"></h2>
+    <h2 class="text-center py-3 mb-5 bg-light" id="sub-title"></h2>
+    <div class="tab-content">
         <div id="tab-1" class="tab-pane fade show p-0 active">
-            <div class="row g-4 justify-content-center justify-content-md-start" id="chef-container">
-                
+            <div class="row g-4 mt-md-4" id="chef-container">
+                    
             </div>
         </div>
     </div>
@@ -13,26 +13,6 @@
     {% endblock main %}
     {% block customJS %}
 <script>
-    //Handling chef cards when they are clicked to show their details
-    const chefCards = document.querySelectorAll('.chef-card');
-    chefCards.forEach(card => {
-        card.addEventListener('click', () => {
-            const input = card.querySelector('.chef-input');
-
-            if (input) {
-                const chefId = input.value;
-                $.post({
-                    url: `/chef-view-count/${chefId}/`,
-                    data: {"csrf_token": "{{csrf_token()}}"},
-                    success: function(response){
-                      if (response.status=='success')
-                      window.location.replace(`/chef-details/${chefId}/`);
-                    }
-                  })
-            }
-        });
-    });
-
     //Fetching and displaying all chefs from the database
     document.body.onload = function(){
         $.getJSON({
@@ -54,25 +34,27 @@
                         // Using the first letter of their lastname
                         const lastname = chef.lastname ? chef.lastname[0] : '';
                         chefHtml += `
-                            <div class="col-lg-3 col-md-4 col-6">
-                            <div class="card chef-card">
-                                <input type="hidden" class="chef-input" name="chefId" value="${chef.id}" />
-                                <img src="/static/photos/${chef.dp}" alt="..." height="210" style="object-fit: cover;">
-                                <div class="footer p-2 d-flex flex-column text-center" style="font-size: small;">
-                                    <span class="h6 d-flex align-items-center justify-content-center">
-                                    ${onlineStatusHtml}
-                                    ${chef.firstname} ${lastname}.
-                                    <img src="/static/photos/verify.png" width="16" class="ms-1"/>
-                                    </span>
-                                    <span class="card-text text-format" style="background: lavender; border-radius: 4px"> ${chef.specialities}</span>
-                                    <span class="text-muted px-2" style="font-style: italic;"><i class="fas fa-location-dot text-warning"></i> ${chef.city}, ${chef.state} State</span>
-                                </div>
-                            </div>
+                            <div class="col-lg-2 col-md-4 col-6 wow fadeInUp" data-wow-delay="0.1s">
+                                <a href="/chef-details/${chef.id}/" class="text-decoration-none">
+                                    <div class="card">
+                                        <input type="hidden" class="chef-input" name="chefId" value="${chef.id}" />
+                                        <img src="/static/photos/${chef.dp}" alt="${chef.firstname} ${lastname}'s profile picture" height="210" style="object-fit: cover;">
+                                        <div class="footer p-2 d-flex flex-column text-center" style="font-size: small;">
+                                            <span class="h6 d-flex align-items-center justify-content-center">
+                                            ${onlineStatusHtml}
+                                            ${chef.firstname} ${lastname}.
+                                            <img src="/static/photos/verify.png" width="16" class="ms-1" alt="Verified"/>
+                                            </span>
+                                            <span class="card-text text-format" style="background: lavender; border-radius: 4px"> ${chef.specialities}</span>
+                                            <span class="text-muted px-2" style="font-style: italic;"><i class="fas fa-location-dot text-warning"></i> ${chef.city}, ${chef.state} State</span>
+                                        </div>
+                                    </div>
+                                </a>
                             </div>
                         `;
                     });
                     $("#chef-container").append(chefHtml);
-                    $("#sub-title").html("Professional Chefs");
+                    $("#sub-title").html("Discover professional chefs around you.");
     
                 } else if (response.status == "not-found"){
                     $("#chef-container").html("<p class='d-flex justify-content-center'>No chefs found.</p>");
@@ -82,64 +64,74 @@
                 $("#chef-container").html("<p class='d-flex justify-content-center'>Something went wrong. Please, try again.</p>");
             }
         });
-    }   
+    }  
 
-    //Handling searching for chefs, by location, name, and specialities
-    $('.search-button').click(function(){
-        const searchInput = $('#search-box').val().trim();
-        if (searchInput){
-            $.ajax({
-                url: "/chefs/",
-                type: "POST",
-                data: {"csrf_token": "{{csrf_token()}}", "searchInput": searchInput},
-                success: function(response) {
-                    if (response.status == "success") {
-                        const useronline = "{{session.get('useronline')}}"; 
-                        let chefHtml = "";
-                        $("#chef-container").empty();
-        
-                        response.chef_list.forEach(chef => {
-                            // Determine online status icon
-                            let onlineStatusHtml = '';
-                            if (useronline) {
-                                onlineStatusHtml = '<i class="fa-solid fa-circle online me-2" style="color: green; font-size: x-small;"></i>';
-                            } else {
-                                onlineStatusHtml = '<i class="fa-solid fa-circle me-2" style="color: grey; font-size: x-small;"></i>';
-                            }
-                            // Using the first letter of their lastname
-                            const lastname = chef.lastname ? chef.lastname[0] : '';
-                            chefHtml += `
-                                <div class="col-lg-3 col-md-4 col-6">
-                                <div class="card chef-card">
-                                    <input type="hidden" class="chef-input" name="chefId" value="${chef.id}" />
-                                    <img src="/static/photos/${chef.dp}" alt="..." height="210" style="object-fit: cover;">
-                                    <div class="footer p-2 d-flex flex-column text-center" style="font-size: small;">
-                                        <span class="h6 d-flex align-items-center justify-content-center">
-                                        ${onlineStatusHtml}
-                                        ${chef.firstname} ${lastname}.
-                                        <img src="/static/photos/verify.png" width="16" class="ms-1"/>
-                                        </span>
-                                        <span class="card-text text-format" style="background: lavender; border-radius: 4px"> ${chef.specialities}</span>
-                                        <span class="text-muted px-2" style="font-style: italic;"><i class="fas fa-location-dot text-warning"></i> ${chef.city}, ${chef.state} State</span>
+   // Handling searching for chefs, by location, name, and specialities
+    function handleSearch() {
+        const searchInput = document.getElementById('search-input').value.trim();
+        $.ajax({
+            url: "/chefs/",
+            type: "POST",
+            dataType: 'json',
+            data: { "csrf_token": "{{ csrf_token() }}", "searchInput": searchInput },
+            success: function(response) {
+                if (response.status == "success") {
+                    const useronline = "{{session.get('useronline')}}"; 
+                    let chefHtml = "";
+                    $("#chef-container").empty();
+    
+                    response.chef_list.forEach(chef => {
+                        // Determine online status icon
+                        let onlineStatusHtml = '';
+                        if (useronline == chef.customerid) {
+                            onlineStatusHtml = '<i class="fa-solid fa-circle online me-2" style="color: green; font-size: x-small;"></i>';
+                        } else {
+                            onlineStatusHtml = '<i class="fa-solid fa-circle me-2" style="color: grey; font-size: x-small;"></i>';
+                        }
+                        // Using the first letter of their lastname
+                        const lastname = chef.lastname ? chef.lastname[0] : '';
+                        chefHtml += `
+                            <div class="col-lg-2 col-md-4 col-6 wow fadeInUp" data-wow-delay="0.1s">
+                                <a href="/chef-details/${chef.id}/" class="text-decoration-none">
+                                    <div class="card">
+                                        <input type="hidden" class="chef-input" name="chefId" value="${chef.id}" />
+                                        <img src="/static/photos/${chef.dp}" alt="${chef.firstname} ${lastname}'s profile picture" height="210" style="object-fit: cover;">
+                                        <div class="footer p-2 d-flex flex-column text-center" style="font-size: small;">
+                                            <span class="h6 d-flex align-items-center justify-content-center">
+                                            ${onlineStatusHtml}
+                                            ${chef.firstname} ${lastname}.
+                                            <img src="/static/photos/verify.png" width="16" class="ms-1" alt="Verified"/>
+                                            </span>
+                                            <span class="card-text text-format" style="background: lavender; border-radius: 4px"> ${chef.specialities}</span>
+                                            <span class="text-muted px-2" style="font-style: italic;"><i class="fas fa-location-dot text-warning"></i> ${chef.city}, ${chef.state} State</span>
+                                        </div>
                                     </div>
-                                </div>
-                                </div>
-                            `;
-                        });
-                        $("#chef-container").append(chefHtml);
-                        $("#sub-title").html("Professional Chefs");
-        
-                    } else if (response.status == "not-found"){
-                        $("#chef-container").html("<p class='d-flex justify-content-center'>No chefs found.</p>");
-                    }
-                },
-                error: function(error) {
-                    $("#chef-container").html("<p class='d-flex justify-content-center'>Something went wrong. Please, try again.</p>");
+                                </a>
+                            </div>
+                        `;
+                    });
+                    $("#chef-container").append(chefHtml);
+                    $("#sub-title").html("Discover professional chefs around you.");
+    
+                } else if (response.status == "not-found"){
+                    $("#chef-container").html("<p class='d-flex justify-content-center'>No chefs found.</p>");
                 }
-                
-            });
-        }
-    })
+            },
+            error: function(error) {
+                $("#chef-container").html("<p class='d-flex justify-content-center'>Something went wrong. Please, try again.</p>");
+            }
+        });
+    }
 
+    $('.search-button').on('click', function() {
+        handleSearch();
+    });
+ 
+    $('#search-input').on('keypress', function(event) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            handleSearch(); 
+        }
+    });
 </script>
 {% endblock customJS %}

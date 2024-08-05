@@ -37,7 +37,6 @@ def cart_details():
     customer = Customer.query.get_or_404(cid)
     products = Product.query.filter(Product.status=='1').all()
     cart_items = Cart.query.filter_by(customerid=customer.id).all()
-    wishlist_items = Wishlist.query.filter_by(customerid=customer.id).all()
     product_list = []
     final_total = 0
     
@@ -46,11 +45,9 @@ def cart_details():
        product.quantity = item.quantity
        final_total = final_total + (product.price * product.quantity)
        product_list.append(product)
-    number_of_cart_items = len(cart_items) if cart_items else 0
-    number_of_wishlist_item = len(wishlist_items) if wishlist_items else 0
+    number_of_cart_items = len(cart_items)
        
-    return render_template('utilities/cart_details.html', title="Cart Details", product_list=product_list, final_total=final_total, customer=customer,
-                products=products, number_of_wishlist_item=number_of_wishlist_item, number_of_cart_items=number_of_cart_items)
+    return render_template('utilities/cart_details.html', title="Cart Details", product_list=product_list, final_total=final_total, customer=customer, products=products, number_of_cart_items=number_of_cart_items)
     
 
 @app.route('/clear-cart/')
@@ -77,33 +74,23 @@ def add_to_cart(fid):
         db.session.add(new_item)
     db.session.commit()
 
-    cart_items = Cart.query.filter_by(customerid=customer.id).all()
-    cart = Cart.query.filter_by(productid=fid).first()
-    if cart:
-        cart_list = {
-            "quantity": cart.quantity,
-            "productid": cart.productid,
-        }
-    number_of_cart_items = len(cart_items) if cart_items else 0
-    return jsonify({"status": "success", "number_of_cart_items": number_of_cart_items, "cart_list": cart_list})
+    number_of_cart_items = Cart.query.filter_by(customerid=customer.id).count()
+    return jsonify({"status": "success", "number_of_cart_items": number_of_cart_items})
         
    
 @app.route('/remove-from-cart/<int:fid>/', methods=['GET','POST'])
 def remove_from_cart(fid):
-    cart_item = Cart.query.filter_by(productid=fid).first()
-    if cart_item.quantity == 0:
-        db.session.delete(cart_item)
-    else:
+    cid = session.get('useronline')
+    customer = Customer.query.get_or_404(cid)  
+    cart_item = Cart.query.filter_by(productid=fid, customerid=customer.id).first()
+    if cart_item.quantity > 1:
         cart_item.quantity -= 1
-    db.session.commit()
-    cart_list = {
-        "quantity": cart_item.quantity,
-        "productid": cart_item.productid,
-    }
-    return jsonify({"status": "success", "cart_list": cart_list})
+        db.session.commit()
+    number_of_cart_items = Cart.query.filter_by(productid=fid, customerid=customer.id).count()
+    return jsonify({"status": "success", "number_of_cart_items": number_of_cart_items})
 
     
-@app.route('/delete-item/<int:fid>', methods=['GET', 'POST'])
+@app.route('/delete-item/<int:fid>/', methods=['GET', 'POST'])
 def delete_item(fid):
     cart_item = Cart.query.filter_by(productid=fid).first()
     db.session.delete(cart_item)     
@@ -113,19 +100,28 @@ def delete_item(fid):
 
 @app.route('/checkout/', methods=['GET', 'POST'])
 def checkout():
-    cid = session.get('useronline')
-    customer = Customer.query.get_or_404(cid)
     if request.method == 'POST':
         firstname = request.form.get('firstname')
         lastname = request.form.get('lastname')
         amount = request.form.get('amount')
         email = request.form.get('email')
-        ref = str(token_hex(16))
+        ref = f'Payment-{str(token_hex(6))}'
         session['payref'] = ref
         
-        payment = Payment(amount=amount, customerid=customer.id, firstname=firstname, lastname=lastname, status='pending', email=email, ref=ref)
+        payment = Payment(
+            amount=amount,
+            customerid=customer.id,
+            firstname=firstname,
+            lastname=lastname,
+            status='pending',
+            email=email,
+            ref=ref
+        )
         db.session.add(payment)
         db.session.commit()
+    else:
+        cid = session.get('useronline')
+        customer = Customer.query.get_or_404(cid)
     return redirect(url_for('confirm_payment'))
 
 
@@ -137,19 +133,19 @@ def confirm_payment():
         cid = session.get('useronline')
         customer = Customer.query.get_or_404(cid)
         cart_items = Cart.query.filter_by(customerid=customer.id).all()
-        wishlist_items = Wishlist.query.filter_by(customerid=customer.id).all()
-        number_of_cart_items = len(cart_items) if cart_items else 0
-        number_of_wishlist_item = len(wishlist_items) if wishlist_items else 0
+        number_of_cart_items = len(cart_items)
 
     product_list = []
     final_total = 0
+    quantity = 0
     
     for item in cart_items:
        product = Product.query.get_or_404(item.productid)
        product.quantity = item.quantity
        final_total = final_total + (product.price * product.quantity)
+       quantity = quantity + item.quantity
        product_list.append(product)
-    return render_template('utilities/confirm_payment.html', title='Confirm Payment', payment_deets=payment_deets, product_list=product_list, number_of_cart_items=number_of_cart_items, customer=customer, number_of_wishlist_item=number_of_wishlist_item)
+    return render_template('utilities/confirm_payment.html', title='Confirm Payment', quantity=quantity, payment_deets=payment_deets, product_list=product_list, number_of_cart_items=number_of_cart_items, customer=customer)
 
 
 @app.route('/paystack/initialize/', methods=['GET', 'POST'])
@@ -196,7 +192,7 @@ def payment_landig_page():
         
         if response_json and response_json['status'] is True:
             payment.status = 'paid'
-            orderid = str(token_hex(16))
+            orderid = f'GK-OrderID-{str(token_hex(6))}'
             order = Order(order_number=orderid, customerid=payment.customerid, paymentid=payment.id)
             db.session.add(order)
         else:
@@ -208,13 +204,11 @@ def payment_landig_page():
     
 @app.route('/payment-status/', methods=["GET", "POST"])
 def payment_status():
-    if session.get('useronline'):
-        cid = session.get('useronline')
+    cid = session.get('useronline')
+    if cid:
         customer = Customer.query.get_or_404(cid) or None
         cart_items = Cart.query.filter_by(customerid=customer.id).all()
-        wishlist_items = Wishlist.query.filter_by(customerid=customer.id).all()
-        number_of_cart_items = len(cart_items) if cart_items else 0
-        number_of_wishlist_item = len(wishlist_items) if wishlist_items else 0
+        number_of_cart_items = len(cart_items)
         ref = session.get('payref')
         payment_deets = Payment.query.filter_by(ref=ref).first()
         order_deets = Order.query.filter_by(paymentid=payment_deets.id).first()
@@ -225,8 +219,13 @@ def payment_status():
             db.session.add(order_item)
             db.session.commit()
     
-    return render_template('utilities/payment_status.html', title="Payment Status", payment_deets=payment_deets, order_deets=order_deets, customer=customer,
-                            number_of_cart_items=number_of_cart_items, number_of_wishlist_item=number_of_wishlist_item)
+    return render_template('utilities/payment_status.html',
+        title="Payment Status",
+        payment_deets=payment_deets,
+        order_deets=order_deets,
+        customer=customer,
+        number_of_cart_items=number_of_cart_items
+    )
 
 
 @app.route('/add-to-wishlist/<int:fid>/', methods=['GET','POST'])
@@ -236,9 +235,7 @@ def add_to_wishlist(fid):
     new_item = Wishlist(productid=fid, customerid=customer.id)
     db.session.add(new_item)
     db.session.commit()
-    wishlist_items = Wishlist.query.filter_by(customerid=customer.id).all()
-    number_of_wishlist_item = len(wishlist_items)
-    return jsonify({"status": "success", "message": "Item added to wishlist", "number_of_wishlist_item": number_of_wishlist_item})
+    return jsonify({"status": "success", "message": "Product added to wishlist"})
 
 
 @app.route('/remove-from-wishlist/<int:fid>/', methods=['GET','POST'])
@@ -248,26 +245,24 @@ def remove_from_wishlist(fid):
     wishlist_item = Wishlist.query.filter_by(productid=fid).first()
     db.session.delete(wishlist_item)  
     db.session.commit()
-    wishlist_items = Wishlist.query.filter_by(customerid=customer.id).all()
-    number_of_wishlist_item = len(wishlist_items)
-    return jsonify({"status": "success", "message": "Item removed from wishlist", "number_of_wishlist_item": number_of_wishlist_item})
+    return jsonify({"status": "success", "message": "Product removed from wishlist"})
 
 
 @app.route('/wishlist/')
 def wishlist():
-    if session.get('useronline'):
-        cid = session.get('useronline')
+    cid = session.get('useronline')
+    if cid:
         customer = Customer.query.get_or_404(cid)
-        cart_items = Cart.query.filter_by(customerid=customer.id).all()
-        wishlist_items = Wishlist.query.filter_by(customerid=customer.id).all()
-        number_of_cart_items = len(cart_items)
-        number_of_wishlist_item = len(wishlist_items)
-    else:
-        number_of_cart_items = 0
-        number_of_wishlist_item = 0
-        wishlist_items = None
-        customer = None
-    return render_template('utilities/wishlist.html', title='My Wishlist', wishlist_items=wishlist_items, number_of_cart_items=number_of_cart_items, customer=customer, number_of_wishlist_item=number_of_wishlist_item)
+    wishlist_items = Wishlist.query.filter_by(customerid=customer.id).all()
+    number_of_cart_items = Cart.query.filter_by(customerid=customer.id).count()
+    number_of_wishlist_item = Wishlist.query.filter_by(customerid=customer.id).count()
+    return render_template('utilities/wishlist.html',
+        title='My Wishlist',
+        wishlist_items=wishlist_items,
+        number_of_cart_items=number_of_cart_items,
+        customer=customer,
+        number_of_wishlist_item=number_of_wishlist_item
+    )
 
 
 @app.route('/delete-wishlist/<int:wid>')
@@ -280,34 +275,33 @@ def delete_wishlist(wid):
 
 @app.route('/payment-history/')
 def payment_history():
-    if session.get('useronline'):
-        cid = session.get('useronline')
-        customer = Customer.query.get_or_404(cid)
-        cart_items = Cart.query.filter_by(customerid=customer.id).all()
-        wishlist_items = Wishlist.query.filter_by(customerid=customer.id).all()
-        number_of_cart_items = len(cart_items)
-        number_of_wishlist_item = len(wishlist_items)
-        payment_lists = Payment.query.filter_by(customerid=customer.id).order_by(Payment.date_paid).all()
-    else:
-        number_of_cart_items = 0
-        number_of_wishlist_item = 0
-        customer = None
-    return render_template('utilities/payment_history.html', title='My Payment History', payment_lists=payment_lists, number_of_cart_items=number_of_cart_items,
-                            customer=customer, number_of_wishlist_item=number_of_wishlist_item)
+    cid = session.get('useronline')
+    if cid:
+        customer = Customer.query.get_or_404(cid)    
+    number_of_cart_items = len(Cart.query.filter_by(customerid=customer.id).all()) or 0
+    payment_lists = Payment.query.filter_by(customerid=customer.id).order_by(Payment.date_paid).all()
+    return render_template('utilities/payment_history.html',
+        title='My Payment History',
+        payment_lists=payment_lists,
+        number_of_cart_items=number_of_cart_items,
+        customer=customer
+    )
 
 
 @app.route('/order-history/')
 def order_history():
-    if session.get('useronline'):
-        cid = session.get('useronline')
-        customer = Customer.query.get_or_404(cid) or None
-        cart_items = Cart.query.filter_by(customerid=customer.id).all()
-        wishlist_items = Wishlist.query.filter_by(customerid=customer.id).all()
-        number_of_cart_items = len(cart_items) if cart_items else 0
-        number_of_wishlist_item = len(wishlist_items) if wishlist_items else 0
-        order_lists = Order.query.filter_by(customerid=customer.id).order_by(Order.date_ordered).all()
-    return render_template('utilities/order_history.html', title='My Order History', order_lists=order_lists, number_of_cart_items=number_of_cart_items,
-                            customer=customer, number_of_wishlist_item=number_of_wishlist_item)
+    cid = session.get('useronline')
+    if cid:
+        customer = Customer.query.get_or_404(cid)
+        number_of_cart_items = Cart.query.filter_by(customerid=customer.id).count()
+    number_of_cart_items = 0    
+    order_lists = Order.query.filter_by(customerid=customer.id).order_by(Order.date_ordered).all()
+    return render_template('utilities/order_history.html',
+        title='My Order History',
+        order_lists=order_lists,
+        number_of_cart_items=number_of_cart_items,
+        customer=customer
+    )
 
 
 @app.route('/remove-orderitem/<int:pid>/<int:oid>/')
@@ -342,3 +336,29 @@ def load_items_to_cart(oid):
     db.session.delete(existing_cart)
     db.session.commit()
     return redirect(url_for('cart_details'))
+
+
+@app.route('/print-invoice/<string:order_number>/', methods=['GET', 'POST'])
+@login_required
+def print_invoice(order_number):
+    cid = session.get('useronline')
+    if cid:
+        customer = Customer.query.get_or_404(cid)
+        number_of_cart_items = Cart.query.filter_by(customerid=customer.id).count()
+    number_of_cart_items = 0
+    payment_deets = Payment.query.filter_by(id=order.paymentid).first()
+    order = Order.query.filter_by(order_number=order_number).first()
+    if order:
+        order_items = OrderItem.query.filter_by(orderid=order.id).all()
+        product_list = []
+        final_total = 0
+        quantity = 0
+    
+        for item in order_items:
+            product = Product.query.get_or_404(item.productid)
+            product.quantity = item.quantity
+            final_total = final_total + (product.price * product.quantity)
+            quantity = quantity + item.quantity
+            product_list.append(product)
+
+    return render_template('utilities/view_invoice.html', title='View Invoice',  quantity=quantity, payment_deets=payment_deets, product_list=product_list, number_of_cart_items=number_of_cart_items, customer=customer)

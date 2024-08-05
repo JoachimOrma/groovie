@@ -6,7 +6,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.orm import joinedload
 from sqlalchemy import or_
 from groovekitchen import app
-from groovekitchen.models import db, Caterer, Product, Cart, Customer, Wishlist, Like, Post, Comment, Booking, Gallery
+from groovekitchen.models import db, Caterer, Product, Cart, Customer, Wishlist, Like, Post, Speciality, Comment, Booking, Gallery
 
 
 ALLOWED_EXTENSIONS_IMAGES = {'png', 'jpg', 'jpeg', 'gif', 'webp', 'jpg', 'jfif'}
@@ -24,29 +24,32 @@ def login_required(func):
 @app.route('/caterer-details/<int:cid>/')
 def caterer_details(cid):
     catererid = Caterer.query.filter(Caterer.id == cid).first()
+    catererid.view_count += 1
+    db.session.commit()
     caterers = Caterer.query.all()
-    if session.get('useronline'):
-        cid = session.get('useronline')
+    cid = session.get('useronline')
+    if cid:
         customer = Customer.query.get_or_404(cid)
-        cart_items = Cart.query.filter_by(customerid=customer.id).all()
-        number_of_cart_items = len(cart_items)
-        wishlist_items = Wishlist.query.filter_by(customerid=customer.id).all()
-        number_of_wishlist_item = len(wishlist_items)
-    else:
-        number_of_cart_items = 0
-        number_of_wishlist_item = 0
-        customer = None
-    return render_template('caterers/caterer_details.html', title='Caterer Details', caterer=catererid, caterers=caterers, customer=customer, number_of_cart_items=number_of_cart_items,
-                            number_of_wishlist_item=number_of_wishlist_item)
+        number_of_cart_items = Cart.query.filter_by(customerid=customer.id).count()
+    customer = None
+    number_of_cart_items = 0
+    return render_template('caterers/caterer_details.html',
+        title='Caterer Details',
+        caterer=catererid,
+        caterers=caterers,
+        customer=customer,
+        number_of_cart_items=number_of_cart_items
+    )
 
 
 @app.route('/get-caterers/')
 def get_caterers():
     caterers = Caterer.query.filter_by(status='1', verification='unverified').all()
     if caterers:
-        random.shuffle(caterer)
+        random.shuffle(caterers)
         caterer_list = [{
             "id": caterer.id,
+            "customerid": caterer.customerid,
             "firstname": caterer.customer_deets.firstname,
             "lastname": caterer.customer_deets.lastname,
             "dp": caterer.customer_deets.dp,
@@ -76,6 +79,7 @@ def catering_services():
             if caterers:
                 caterer_list = [{
                     "id": caterer.id,
+                    "customerid": caterer.customerid,
                     "firstname": caterer.customer_deets.firstname,
                     "lastname": caterer.customer_deets.lastname,
                     "dp": caterer.customer_deets.dp,
@@ -90,20 +94,24 @@ def catering_services():
         else:
             return jsonify({"status": "error"})
     else:
+        search = "E.g: Lola or Osun or Asian Dishes"
+        text = "Find professional caterers around you."
         gallery = Gallery.query.all()
-        if session.get('useronline'):
-            cid = session.get('useronline')
+        cid = session.get('useronline')
+        if cid:
             customer = Customer.query.get_or_404(cid)
-            cart_items = Cart.query.filter_by(customerid=customer.id).all()
-            wishlist_items = Wishlist.query.filter_by(customerid=customer.id).all()
-            number_of_cart_items = len(cart_items)
-            number_of_wishlist_item = len(wishlist_items)
-        else:
-            number_of_wishlist_item = 0
-            number_of_cart_items = 0
-            customer = None
-    return render_template('caterers/catering_services.html', title='Caterers & Event Planners', page='catering', gallery=gallery,
-                           number_of_wishlist_item=number_of_wishlist_item, number_of_cart_items=number_of_cart_items, customer=customer)
+            number_of_cart_items = Cart.query.filter_by(customerid=customer.id).count()
+        customer = None
+        number_of_cart_items = 0
+    return render_template('caterers/catering_services.html',
+            title='Caterers & Event Planners',
+            search=search,
+            text=text,
+            page='catering',
+            gallery=gallery,
+            number_of_cart_items=number_of_cart_items,
+            customer=customer
+        )
 
 
 @app.route('/caterer-dashboard/')
@@ -131,43 +139,31 @@ def caterer_profile():
 
 @app.route('/career-as-a-caterer/')
 def caterer_career():
-    if session.get('useronline'):
-        cid = session.get('useronline')
+    cid = session.get('useronline')
+    if cid:
         customer = Customer.query.get_or_404(cid)
-        cart_items = Cart.query.filter_by(customerid=customer.id).all()
-        wishlist_items = Wishlist.query.filter_by(customerid=customer.id).all()
-        number_of_cart_items = len(cart_items)
-        number_of_wishlist_item = len(wishlist_items)
-    else:
-        number_of_wishlist_item = 0
-        number_of_cart_items = 0
-        customer = None
-    return render_template('caterers/caterers.html', title="Career as a caterer", number_of_wishlist_item=number_of_wishlist_item, number_of_cart_items=number_of_cart_items, customer=customer)
+        number_of_cart_items = Cart.query.filter_by(customerid=customer.id).count()
+    customer = None
+    number_of_cart_items = 0
+    return render_template('caterers/caterers.html',
+        title="Career as a caterer",
+        number_of_cart_items=number_of_cart_items,
+        customer=customer
+    )
 
 
 @app.route('/register-as-a-caterer/', methods=['GET', 'POST'])
 def caterer_registration():
-    if session.get('useronline'):
-        cid = session.get('useronline')
-        customer = Customer.query.get_or_404(cid) or None
-        cart_items = Cart.query.filter_by(customerid=customer.id).all()
-        wishlist_items = Wishlist.query.filter_by(customerid=customer.id).all()
-        number_of_cart_items = len(cart_items)
-        number_of_wishlist_item = len(wishlist_items)
-    else:
-        number_of_wishlist_item = 0
-        number_of_cart_items = 0
-        customer = None
     if request.method == 'POST':
         state = request.form.get('state')
         city = request.form.get('city')
         phone = request.form.get('phone')
-        specialities = request.form.get('specialities')
+        speciality = request.form.get('specialities')
         working_days = request.form.get('working_days')
         photo_file = request.files['photo']
         print(request.form)
        
-        if state and city and phone and specialities and working_days and photo_file:
+        if state and city and phone and speciality and working_days and photo_file:
             file_name = photo_file.filename
             file_deets = file_name.split('.')
             ext = file_deets[-1]
@@ -179,7 +175,7 @@ def caterer_registration():
                 state=state,
                 city=city,
                 status='1',
-                specialities=specialities,
+                specialityid=speciality,
                 working_days=working_days,
                 customerid=customer.id,
             )
@@ -191,16 +187,25 @@ def caterer_registration():
             return jsonify({"status": "success"})
         else:
             return jsonify({"status": "error"})
-        
-    return render_template('caterers/caterer_registration.html', title="Register as a caterer", customer=customer, number_of_cart_items=number_of_cart_items, number_of_wishlist_item=number_of_wishlist_item)
+    else:
+        specialities = Speciality.query.all()
+        cid = session.get('useronline')
+        if cid:
+            customer = Customer.query.get_or_404(cid)
+            number_of_cart_items = Cart.query.filter_by(customerid=customer.id).count()
+        customer = None
+        number_of_cart_items = 0
+    return render_template('caterers/caterer_registration.html',
+        title="Register as a caterer",
+        customer=customer,
+        number_of_cart_items=number_of_cart_items,
+        specialities=specialities,     
+    )
 
 
 @app.route('/caterer-profile-setting/', methods=['GET', 'POST'])
 @login_required
 def caterer_profile_setting():
-    cid = session.get('useronline')
-    catererid = Caterer.query.filter_by(customerid=cid).first()
-    customer = Customer.query.filter_by(id=catererid.customerid).first()
     if request.method == 'POST':
         firstname = request.form.get('firstname')
         lastname = request.form.get('lastname')
@@ -237,16 +242,20 @@ def caterer_profile_setting():
             return jsonify({"status": "success"})
         else:
             return jsonify({"message":"Please complete all data fields!", "status": "error"})
-    
-    return render_template('caterers/profile_setting.html', title='Profile Setting', page="profile-setting", caterer=catererid)
+    else:
+        cid = session.get('useronline')
+        catererid = Caterer.query.filter_by(customerid=cid).first()
+        customer = Customer.query.filter_by(id=catererid.customerid).first()  
+    return render_template('caterers/profile_setting.html',
+        title='Profile Setting',
+        page="profile-setting",
+        caterer=catererid
+    )
 
 
 @app.route('/caterer-account-setting/', methods=['GET', 'POST'])
 @login_required
-def caterer_account_setting():
-    cid = session.get('useronline')
-    catererid = Caterer.query.filter_by(customerid=cid).first()
-    customer = Customer.query.filter_by(id=catererid.customerid).first()
+def caterer_account_setting():   
     if request.method == 'POST':
         password = request.form.get('password')
         confirm_password = request.form.get('confirm_password')
@@ -260,6 +269,10 @@ def caterer_account_setting():
             else:
                 return jsonify({"status": "unmatch_password"})
         return jsonify({"status": "error"})
+    else:
+        cid = session.get('useronline')
+        catererid = Caterer.query.filter_by(customerid=cid).first()
+        customer = Customer.query.filter_by(id=catererid.customerid).first()
     return render_template('caterers/account_setting.html', title='Account Setting', page="account-setting", caterer=catererid)
 
 
@@ -268,10 +281,8 @@ def caterer_account_setting():
 def caterer_delete_account(cid):
     cid = session.get('useronline')
     catererid = Caterer.query.filter_by(customerid=cid).first()
-    
     catererid.status='0'
     db.session.commit()
-    
     return jsonify({"status": "delete"})
 
 
@@ -280,10 +291,8 @@ def caterer_delete_account(cid):
 def caterer_deactivate_account(cid):
     cid = session.get('useronline')
     catererid = Caterer.query.filter_by(customerid=cid).first()
-    
     catererid.status = '2'
     db.session.commit()
-    
     return jsonify({"status": "deactivate"})
 
 
@@ -296,15 +305,8 @@ def caterer_logout():
     return redirect(url_for('login'))
 
 
-@app.route('/view-caterer-profile/')
-@login_required
-def view_caterer_profile():
-    cid = session.get('useronline')
-    catererid = Caterer.query.filter_by(customerid=cid).first()
-    return render_template("caterers/view_caterer_profile.html", title="View Profile", caterer=catererid)
-
-
 @app.route('/caterer-timeline/')
+@login_required
 def caterer_timeline():
     cid = session.get('useronline')
     catererid = Caterer.query.filter_by(customerid=cid).first()
@@ -318,8 +320,6 @@ def caterer_timeline():
 @app.route('/caterer-make-post/', methods=['GET', 'POST'])
 @login_required
 def caterer_make_post():
-    cid = session.get('useronline')
-    catererid = Caterer.query.filter_by(customerid=cid).first()
     if request.method == 'POST':
         title = request.form.get('title')
         content = request.form.get('content')
@@ -352,14 +352,15 @@ def caterer_make_post():
             return jsonify({"status": "success"})
         else:
             return jsonify({"status": "error"})
+    else:
+        cid = session.get('useronline')
+        catererid = Caterer.query.filter_by(customerid=cid).first()
     return render_template("caterers/caterer_make_post.html", title="Social Fields", caterer=catererid)
 
 
 @app.route('/caterer-create-product/', methods=['GET', 'POST'])
 @login_required
 def caterer_create_product():
-    cid = session.get('useronline')
-    catererid = Caterer.query.filter_by(customerid=cid).first()
     if request.method == 'POST':
         product_name = request.form.get('product_name')
         price = request.form.get('price')
@@ -382,10 +383,14 @@ def caterer_create_product():
             return jsonify({"status": "success"})
         else:
             return jsonify({"status": "error"})
+    else:
+        cid = session.get('useronline')
+        catererid = Caterer.query.filter_by(customerid=cid).first()
     return render_template('caterers/create_product.html', title='Create Product', caterer=catererid)
 
 
 @app.route('/caterer-product/')
+@login_required
 def caterer_product():
     cid = session.get('useronline')
     catererid = Caterer.query.filter_by(customerid=cid).first()
@@ -394,28 +399,16 @@ def caterer_product():
 
 
 @app.route('/caterer-delete-product/<int:pid>/')
+@login_required
 def caterer_delete_product(pid):
     return 'pass'
 
-
-@app.route('/caterer-view-count/<int:id>/', methods=['GET', 'POST'])
-def caterer_profile_view_count(id):
-    caterer = Caterer.query.get_or_404(id)
-    caterer.view_count += 1
-    db.session.commit()
-    return jsonify({"status": "success"})
-
-
 @app.route('/caterer-gallery/', methods=['GET', 'POST'])
+@login_required
 def caterer_gallery():
-    cid = session.get('useronline')
-    catererid = Caterer.query.get_or_404(cid)
-    gallery = Gallery.query.filter_by(catererid=cid).all()
     if request.method == 'POST':
         description = request.form.get('desc')
         photos = request.files.getlist('photos')
-
-        print(request.form)
 
         if photos:
             image_list = []
@@ -433,6 +426,9 @@ def caterer_gallery():
             return jsonify({'status': 'success'})
         else:
             return jsonify({'status': 'error'})
-
+    else:
+        cid = session.get('useronline')
+        catererid = Caterer.query.get_or_404(cid)
+        gallery = Gallery.query.filter_by(catererid=cid).all()
     return render_template('caterers/event_gallery.html', title='My Gallery', gallery=gallery, caterer=catererid)
 

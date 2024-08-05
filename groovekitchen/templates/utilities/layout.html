@@ -8,9 +8,6 @@
     <meta content="" name="keywords">
     <meta content="" name="description">
 
-    <!-- Favicon -->
-    <link href="/static/img/favicon.ico" rel="icon">
-
     <!-- Google Web Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -58,10 +55,10 @@
         <div class="container-xxl position-relative p-0">
            {% include 'utilities/navbar.html' %}
             {% block banner %}
-            <div class="container-xxl pt-md-3 mb-md-2 pb-md-0 bg-dark hero-header">
+            <div class="container-xxl pt-md-3 mb-md-2 pb-0 bg-dark hero-header">
                 <div class="container text-center mb-1 mt-lg-5 pt-md-3 pt-2 pt-lg-5">
                     <div class="d-none d-md-block">
-                        <h3 class="display-6 text-white animated slideInDown">{{title}}</h3>
+                        <h3 class="text-white animated slideInDown">{{title}}</h3>
                         <nav aria-label="breadcrumb">
                             <ol class="breadcrumb justify-content-center text-uppercase">
                                 <li class="breadcrumb-item"><a href="#">Home</a></li>
@@ -71,13 +68,16 @@
                         </nav>
                     </div>
                     {% block search %}
-                    <form action="" method="post" class="pb-2 pb-md-3">
-                        <input type="hidden" name="csrf_token" value="{{csrf_token()}}">
-                        <div class="position-relative mx-md-auto mx-0 search-area" style="z-index:0">
-                            <input class="form-control border-primary py-2 py-md-3 ps-4 pe-5" type="text" name="searchInput" id="search-box" placeholder="Search {{title}}..." required />
-                            <button type="button" class="btn btn-primary py-md-2 py-1 position-absolute top-0 end-0 mt-md-2 mt-1 me-md-2 me-1 search-button">Search</button>
-                        </div>
-                    </form>
+                    <div class="search-bar">
+                        <form action="" method="post" class="pb-2 pb-md-3">
+                            <input type="hidden" name="csrf_token" value="{{csrf_token()}}">
+                            <span class="text-light">{{text}}</span>
+                            <div class="position-relative mx-md-auto mx-0 search-area" style="z-index:0">
+                                <input class="form-control border-primary mt-2 py-2 ps-2 pe-5" type="text" name="searchInput" id="search-input" placeholder="{{search}}" required aria-label="{{title}}">
+                                <button type="button" class="btn btn-primary py-1 position-absolute top-0 end-0 mt-1 me-1 search-button" aria-label="Search" style="text-transform: capitalize;">Search</button>
+                            </div>
+                        </form>                       
+                    </div>
                     {% endblock search %}
                 </div>
                 {% endblock banner %}
@@ -159,10 +159,16 @@
      <script src="/static/assets/js/plugin/datatables/datatables.min.js"></script>
     <!-- Template Javascript -->
     <script src="/static/js/main.js"></script>
-    <script>         
+    <script>
+
+        function hideHeroPageOnLoad() {
+            $('#hero-lg').hide();
+        }      
+        setInterval(hideHeroPageOnLoad, 5000);
+       
         const lunchComment = (comment, customer_name) => {
             swal({
-                title: `Dear ${customer_name}, ${comment}`,
+                text: `Dear ${customer_name}, ${comment}`,
                 icon: 'info',
             });
         }
@@ -210,10 +216,10 @@
                 }
             }
         });
-        $('#email').keypress(function(){
+        $('#email').on('input', function(){
             $('.invalid_email').text('');
         });
-        $('#password').keypress(function(){
+        $('#password').on('input', function(){
             $('.invalid_password').text('');
         })
     </script>

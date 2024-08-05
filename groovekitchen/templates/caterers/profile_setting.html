@@ -16,25 +16,25 @@
                  <div class="row">
                     <div class="col-md-6">
                         <div class="form-floating mb-3">
-                            <input type="text" name="firstname" id="firstname" class="form-control noround" value="{{caterer.customer_deets.firstname}}" />
+                            <input type="text" name="firstname" id="firstname" class="form-control " value="{{caterer.customer_deets.firstname}}" />
                             <label for="firstname">Firstname</label>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="form-floating mb-3">
-                            <input type="text" name="lastname" id="lastname" class="form-control noround" value="{{caterer.customer_deets.lastname}}" />
+                            <input type="text" name="lastname" id="lastname" class="form-control " value="{{caterer.customer_deets.lastname}}" />
                             <label for="lastname">Lastname</label>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="form-floating mb-3">
-                           <input type="email" name="email" id="email" class="form-control noround" value="{{caterer.customer_deets.email}}" />
+                           <input type="email" name="email" id="email" class="form-control " value="{{caterer.customer_deets.email}}" />
                            <label for="email">Email</label>
                        </div>
                    </div>
                    <div class="col-md-6">
                         <div class="form-floating mb-3">
-                           <input type="text" name="phone" id="phone" class="form-control noround" value="{% if caterer.phone %}{{caterer.phone}}{% endif %}" minlength="11" maxlength="11" required/>
+                           <input type="text" name="phone" id="phone" class="form-control " value="{% if caterer.phone %}{{caterer.phone}}{% endif %}" minlength="11" maxlength="11" required/>
                            <label for="phone">Phone</label>
                        </div>
                    </div>
@@ -42,13 +42,13 @@
                  <div class="row">
                     <div class="col-md-6">
                         <div class="form-floating mb-3">
-                            <input type="text" name="city" id="city" class="form-control noround" value="{% if caterer.city %}{{caterer.city}}{% endif %}" />
+                            <input type="text" name="city" id="city" class="form-control " value="{% if caterer.city %}{{caterer.city}}{% endif %}" />
                             <label for="city">City</label>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="form-floating mb-3">
-                            <input type="text" name="state" id="state" class="form-control noround" value="{% if caterer.state %}{{caterer.state}}{% endif %}" />
+                            <input type="text" name="state" id="state" class="form-control " value="{% if caterer.state %}{{caterer.state}}{% endif %}" />
                             <label for="state">State</label>
                         </div>
                     </div>
@@ -60,13 +60,13 @@
                 <div class="row">
                     <div class="col-md-12">
                         <div class="form-floating mb-3">
-                            <input name="specialities" id="specialities" class="form-control noround" value="{{caterer.specialities}}" />
+                            <input name="specialities" id="specialities" class="form-control " value="{{caterer.specialities}}" />
                             <label for="specialities">Specialities</label>
                         </div>
                     </div>
                     <div class="col-md-12">
                         <div class="form-floating mb-3">
-                            <input type="text" name="working_days" id="working_days" class="form-control noround" value="{% if caterer.working_days %}{{caterer.working_days}}{% endif %}" />
+                            <input type="text" name="working_days" id="working_days" class="form-control " value="{% if caterer.working_days %}{{caterer.working_days}}{% endif %}" />
                             <label for="working_days">Working Days</label>
                         </div>
                     </div>
@@ -76,7 +76,7 @@
                 </div>
             </fieldset>
             <div class="mt-4">
-              <button type="button" class="btn btn-primary col-12 col-md-4 bnt-lg profile-update-btn noround">Save Changes</button>
+              <button type="button" class="btn btn-primary col-12 col-md-4 bnt-lg profile-update-btn ">Save Changes</button>
             </div>
          </div>
      </div>

@@ -5,30 +5,30 @@
 <div class="container-xxl position-relative p-0">
     <div class="container-xxl bg-dark hero-header" style="height: 100vh">
          <div class="container text-center pt-4 pb-3">
-            <h6 class="h3 text-white animated slideInRight">
+            <h3 class="text-white animated slideInRight">
                 <i class="fa fa-home text-primary" style="cursor: pointer" onclick="goBackToHome();"></i> 
-                Welcome Back to Groove Kitchen
-            </h6>
-            <p class="text-light fs-5">New to Groove Kitchen? <a href="{{url_for('registration')}}" class="text-primary">Create account.</a></p>
+                Welcome Back
+            </h3>
+            <p class="fs-5 text-light">New to Groove Kitchen? <a href="{{url_for('registration')}}" class="text-primary">Create account.</a></p>
         </div>
-        <div class="row px-md-5 px-4 pb-3 justify-content-center align-items-center">
+        <div class="row px-md-5 px-2 pb-3 justify-content-center align-items-center">
             <div class="col-lg-6 col-12 py-3" style="border: 1px solid #777">
                 <p class="fs-4 text-center text-light"> Please Login</p>
                 <form action="{{url_for('login')}}" method="post" novalidate>
                 <input type="hidden" name="csrf_token" value="{{csrf_token()}}">
                     <div class="form-floating mb-3">
-                        {{form.email(class='form-control noround', placeholder='Your Registered Email')}}
+                        {{form.email(class='form-control', placeholder='Your Registered Email')}}
                         {{form.email.label}}
 
                         <p class="invalid_email mt-2"> </p>
                     </div>
                     <div class="form-floating mb-3">
-                        {{form.password(class='form-control noround', placeholder='Your Password')}}
+                        {{form.password(class='form-control', placeholder='Your Password')}}
                         {{form.password.label}}
 
                        <p class="invalid_password mt-2"> </p>
                     </div>
-                    <button type="button" class="btn btn-primary col-12 btn-lg noround" onclick="handleLogin();">Login</button>
+                    <button type="button" class="btn btn-primary col-12 btn-lg " onclick="handleLogin();">Login</button>
                     <div class="d-flex justify-content-between mt-2">
                         <a href="{{url_for('password_recovery')}}" class="text-primary"> Forgot Password?</a>
                         <a href="{{url_for('reactivate_account')}}" class="text-primary"> Reactivate Account</a>
@@ -38,13 +38,13 @@
         </div>
         <!--<div class="row px-lg-5 justify-content-center">
             <div class="col-md-6 d-flex justify-content-center shadow">
-                <a type="button" href="" class="btn btn-success btn-lg noround">
+                <a type="button" href="" class="btn btn-success btn-lg ">
                     <i class="fab fa-google"></i>
                 </a>
-                <a type="button" href="" class="btn btn-blue btn-lg noround ms-5">
+                <a type="button" href="" class="btn btn-blue btn-lg  ms-5">
                     <i class="fab fa-facebook"></i>
                 </a>
-                <a type="button" href="" class="btn btn-danger btn-lg noround ms-5">
+                <a type="button" href="" class="btn btn-danger btn-lg  ms-5">
                     <i class="fab fa-instagram"></i>
                 </a>
             </div>

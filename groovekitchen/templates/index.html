@@ -8,7 +8,13 @@
     <meta content="" name="description">
 
     <!-- Favicon -->
-    <link href="/static/img/favicon.ico" rel="icon">
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/favicon_io/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon_io/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon_io/favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="/static/favicon_io/android-chrome-512x512.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/static/favicon_io/android-chrome-192x192.png">
+    <link rel="icon" type="image/png" sizes="48x48" href="/static/favicon_io/favicon.png">
+    <link rel="manifest" href="/static/favicon_io/site.webmanifest">
 
     <!-- Google Web Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -68,32 +74,54 @@
         <!-- Content Start -->
         <div class="container" style="min-height: 500px;">
             <div class="row flex-md-row-reverse g-0 gx-2 gx-lg-5 justify-content-between">
-                <div class="col-md-6 text-start text-lg-end mb-3">
-                    <form action="{{url}}" method="post" id='search-form'>
+                <div class="col-md-6 text-start text-lg-end mb-3 search-bar">
+                    <form action="" method="post" id='search-form'>
                         <input type="hidden" name="csrf_token" value="{{csrf_token()}}">
                         <div class="position-relative">
-                            <input class="form-control border-primary w-100 py-2 ps-2 pe-5" type="text" name="searchInput" id="search-box" placeholder="What would you like to eat?" required>
-                            <button type="button" class="btn btn-primary btn-sm position-absolute mt-1 top-0 end-0 me-2" id="search-button">Search</button>
+                            <input class="form-control border-primary mt-2 py-2 ps-2 pe-5" type="text" name="searchInput" id="search-box" placeholder="What would you like to eat?" required>
+                            <button type="button" class="btn btn-primary position-absolute py-1 position-absolute top-0 end-0 mt-1 me-1" id="search-button" style="text-transform: capitalize;">Search</button>
                         </div>
                     </form>
                 </div>
                 <div class="col-md-5">
-                    <div class="section-header text-start mb-lg-5 mb-2" style="max-width: 500px;">
-                        <h3 class="mb-3">Top Trending</h3>
+                    <div class="section-header text-start mb-lg-5 mb-2" style="min-width: 350px;">
+                        <h2 class="mb-3">Top Trends</h2>
                     </div>
                 </div>
             </div>
         
             <div class="tab-content">
                 <div id="tab-0" class="tab-pane fade show p-0 active">
-                    <div class="row g-lg-3 g-2 justify-content-center justify-content-lg-start">
+                    <div class="row g-lg-3 g-2">
                         {% for item in menu %}
-                            <div class="col-xl-2 col-lg-2 col-3 meal-col">
-                                <div class="card meal-card">
+                            <div class="col-lg-2 col-md-4 col-6">
+                                <div class="card">
+                                    <img src="/static/menu/{{ item.image }}" alt="{{item.name}}" height="80" style="object-fit: cover; padding: 1px">
                                     <input type="hidden" class="meal-input" name="search_input" value="{{item.name}}" />
-                                    <img src="/static/images/{{ item.image }}" alt="..." height="80" style="object-fit: cover; padding: 1px">
-                                    <div class="footer text-center d-flex flex-column my-2" style="font-size: small;">
-                                        <span class="fw-bold" style="font-style: italic; font-size: medium">{{ item.name }} </span>
+                                </div>
+                                <div class="footer text-center d-flex flex-column bg-dark" style="font-size: small;">
+                                    <a type="button" class="btn text-light fst-italic"
+                                        style="font-size: small" data-bs-toggle="modal"
+                                        data-bs-target="#menuItem-{{item.id}}" aria-expanded="false"
+                                        aria-controls="menuItem" title="View Menu">{{ item.name }}</a>
+                                </div>
+                                <div class="modal fade" id="menuItem-{{item.id}}" tabindex="-1" aria-labelledby="menuItem" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-centered">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">{{item.name}}</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <ul type="none">
+                                                    {% for menu_item in menu_items %}
+                                                      {% if menu_item.menuid == item.id %}
+                                                           <li><a href="/category/{{menu_item.name}}/" class="text-decoration-none text-dark"><i class="fa fa-circle-check text-primary"></i> {{menu_item.name}}</a></li>
+                                                      {% endif %}
+                                                     {% endfor %}
+                                                 </ul>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -139,13 +167,21 @@
                 }
              });
         });
-
-        $('#search-button').click(function(){
-            const searchInput = $('#search-box').val().trim();
-            if(searchInput){
-                window.location.replace(`/category/${searchInput}/`);
+        function handleSearch() {
+            const searchInput = document.getElementById('search-box').value.trim();
+            const form = document.getElementById('search-form');
+            if (searchInput){
+                form.action = '/category/' + encodeURIComponent(searchInput) + '/';
+                form.submit();
             }
-        })
+        }
+        document.getElementById('search-button').addEventListener('click', handleSearch);
+        document.getElementById('search-box').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                handleSearch();
+            }
+        });
 
         if (performance.navigation.type === performance.navigation.TYPE_RELOAD) {
             $('#before').show();
@@ -155,7 +191,6 @@
             $('.search-product').removeClass('hidden');
         }      
         setInterval(hideHeroPageOnLoad, 5000);
-
     </script>
 {% endblock customJS %}
 

@@ -8,6 +8,22 @@
 .hidden {
     display: none;
 }
+.dropdown.dropend:hover .dropdown-menu {
+    display: block;
+}
+
+.dropdown-menu {
+    min-width: 160px;
+}
+
+.dropdown-menu .dropdown-menu {
+    right: 100%;
+    display: none;
+    position: absolute;
+    top: 0;
+    margin-top: -1px;
+    margin-left: 2px;
+}
 
 .ff-secondary {
     font-family: 'Pacifico', cursive;
@@ -109,7 +125,7 @@ a {
 .btn {
     font-family: 'Nunito', sans-serif;
     font-weight: 500;
-    text-transform: uppercase;
+    text-transform: capitalize;
     transition: .5s;
 }
 

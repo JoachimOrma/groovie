@@ -1,102 +1,146 @@
 {% extends 'utilities/layout.html' %}
+
 {% block main %}
 
-  <div id="items-container" style="margin-bottom: 250px">
+  <div id="items-container" style="margin-bottom: 220px">
 
+  </div>
+
+  <div id="previous-search">
+    <ul>
+        
+    </ul>
   </div>
 
 {% endblock main %}
 {% block customJS %}
 <script>
-  $('#search-button').click(function(){
-    const searchInput = $('#search-box').val();
-    $.ajax({
-      url: "/fast-orders/",
-      type: "POST",
-      data: {
-        "csrf_token": "{{csrf_token()}}",
-        "searchInput": searchInput,
-      },
-      success: function(response){
-        if (response.status == 'success' && response.item_list){
-          let itemHtml = '';
-          
-          // Clear previous content in the items-container
-          $('#items-container').html('');
 
-          $('#items-container').append(
-            `<div class="container">
-              <div class="card card-round">
-                <div class="card-header">
-                  <div class="card-head-row card-tools-still-right">
-                    <div class="h3 text-center">Order Details</div>
-                  </div>
-                </div>
-                <div class="card-body p-0">
-                  <div class="table-responsive">
-                    <table class="table align-items-center mb-0">
-                      <thead class="thead-light">
-                        <tr>
-                          <th scope="col">#</th>
-                          <th scope="col">Name</th>
-                          <th scope="col">Quantity</th>
-                          <th scope="col">Price per unit</th>
-                        </tr>
-                      </thead>
-                      <tbody id="items-table-body">
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-              <a class="btn btn-primary mt-3" id="load-to-cart">Load to cart</a>
-              </div>
-            `
-          );
+    function handleSearch() {
+        const searchInput = document.getElementById('search-input').value.trim();
+        $.ajax({
+            url: "/fast-orders/",
+            type: "POST",
+            dataType: 'json',
+            data: {
+                "csrf_token": "{{csrf_token()}}",
+                "searchInput": searchInput,
+            },
+            success: function(response) {
+                if (response.status === 'success') {
+                    let itemHtml = '';
+                    
+                    $('#items-container').html('');
+                    $('#items-container').append(`
+                        <div class="container">
+                            <div class="card card-round">
+                                <div class="card-header">
+                                    <div class="card-head-row card-tools-still-right">
+                                        <div class="h3 text-center">Order Details</div>
+                                    </div>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="table-responsive">
+                                        <table class="table align-items-center mb-0">
+                                            <thead class="thead-light">
+                                                <tr>
+                                                    <th scope="col">#</th>
+                                                    <th scope="col">Name</th>
+                                                    <th scope="col">Quantity</th>
+                                                    <th scope="col">Price per unit</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="items-table-body">
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            <a class="btn btn-primary mt-3" id="load-to-cart">Load to cart</a>
+                        </div>
+                    `);
+    
+                    response.item_list.forEach((item, index) => {
+                        itemHtml += `
+                            <tr>
+                                <input type="hidden" value="${item.orderid}" name="orderId" class="orderId" />
+                                <th scope="row"><button class="btn btn-success btn-sm"><i class="fa fa-check"></i></button></th>
+                                <td>${item.name}</td>
+                                <td>${item.quantity}</td>
+                                <td>${item.price}</td>
+                            </tr>
+                        `;
+                    });
+                    $("#items-table-body").append(itemHtml);
+    
+                    // Add event listener for the "Load to cart" button
+                    $('#load-to-cart').on('click', function() {
+                        let orderId = '';
+                        $('input[name="orderId"]').each(function() {
+                            orderId = $(this).val();
+                        });
+                        $.ajax({
+                            url: `/load-to-cart/${orderId}`,
+                            type: "POST",
+                            data: {"csrf_token": "{{csrf_token()}}" },
+                            success: function(response) {
+                                if (response.status == 'success') {
+                                    swal({
+                                        text: "Order items had been loaded to cart.",
+                                        icon: "success",
+                                        button: false,
+                                        timer: 1500,
+                                    });
+                                    const redirectTOCart = setInterval(() => {
+                                        window.location.replace('/cart-details/');
+                                    }, 2000);
+                                    $('.cart_items_count').text(response.number_of_cart_items);
+                                }
+                            },
+                            error: function(error) {
+                                alert(error);
+                            }
+                        });
+                    });
+                } else if (response.status === 'not-found') {
+                    $('#items-container').html("<p class='text-center my-5'>Order ID is not valid.</p>");
+                }
+            },
+            error: function() {
+                $('#items-container').text('Sorry, we could not retrieve the order details. Please try again.');
+            }
+        });
+    };
 
-          // Populate the table body with items
-          response.item_list.forEach((item, index) => {
-            itemHtml += `
-            <tr>
-              <input type="hidden" value="${item.orderid}" name="orderId" class="orderId" />
-                <th scope="row"><button class="btn btn-success btn-sm"> <i class="fa fa-check"></i></button></th>
-                <td>${item.name}</td>
-                <td>${item.quantity}</td>
-                <td>${item.price}</td>
-              </tr>
-            `;  
-          });
-          
-          // Append the constructed rows to the table body
-          $("#items-table-body").append(itemHtml);
-        } else if (response.status == 'not-found'){
-          $('#items-container').text('Order ID is not valid.');
+    $('.search-button').on('click', function() {
+        handleSearch();
+    });
+    
+    $('#search-input').on('keypress', function(event) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            handleSearch();
         }
-      },
-      error: function() {
-        $('#items-container').text('Sorry, we could not retrieve the order details. Please try again.');
-      }
     });
-  });
 
-  $('#load-to-cart').click(function(event){
-    const form = event.target.closest('form');
-    const searchInput = form.querySelector("#search-box").value;
-    console.log(searchInput)
-    $.ajax({
-      url: `/load-items-to-cart/${orderId}/`,
-      type: 'POST',
-      data: {"csrf_token": "{{csrf_token()}}"},
-      success: function(response) {
-          if (response.status === 'success') {
-            
-          }
-      },
-      error: function() {
-          alert('Error: Request failed.');
-      },
+    $('#load-to-cart').click(function(event){
+      const form = event.target.closest('form');
+      const searchInput = form.querySelector("#search-box").value;
+      console.log('searchInput')
+      $.ajax({
+        url: `/load-items-to-cart/${orderId}/`,
+        type: 'POST',
+        data: {"csrf_token": "{{csrf_token()}}"},
+        success: function(response) {
+            if (response.status === 'success') {
+              
+            }
+        },
+        error: function() {
+            alert('Error: Request failed.');
+        },
+      });
     });
-  })
 
 </script>
 

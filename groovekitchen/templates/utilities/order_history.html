@@ -27,22 +27,26 @@
                         <tr>
                             <th scope="col">#</th>
                             <th scope="col">Order Reference Number</th>
-                            <th scope="col">Payment Reference</th>
                             <th scope="col">Date Ordered</th>
                             <th scope="col">Order Status</th>
+                            <th colspan="2">Action</th>
                         </tr>
                         </thead>
                         <tbody>
                         {% for order in order_lists %}
                         <tr>
-                            <th scope="row"><button class="btn btn-success btn-sm">
-                            <i class="fa fa-check"></i></button>
+                            <th scope="row" class="text-success">
+                            <i class="fa fa-square-check"></i>
                             </th>
                             <td>{{order.order_number}}</td>
-                            <td>{{order.payment_deets.ref}}</td>
                             <td>{{order.date_ordered.strftime("%d/%m/%Y - %I:%M %p")}}</td>
-                            <td><span class="badge bg-success fs-6">Successful</span></td>
+                            <td><span class="badge bg-success">Successful</span></td>
+                            <td class="d-flex">
+                                <a class="btn btn-blue btn-sm me-2" href="{{url_for('print_invoice', order_number=order.order_number)}}" style="text-transform: capitalize; font-size: 0.7rem;">Invoice</a>
+                                <a type="button" class="btn btn-primary btn-sm load-to-cart" data-order-id="{{order.order_number}}" style="text-transform: capitalize; font-size: 0.7rem;">Load</a>
+                            </td>
                         </tr>
+
                         {% endfor %}
                         </tbody>
                     </table>
@@ -52,12 +56,46 @@
             </div>
             </div>
         {% else %}
-        <div class="d-flex justify-content-center fs-5">
+        <div class="d-flex justify-content-center fs-5" style="min-height: 320px; margin-top: 50px;">
             <p class="text-center">Your have made no oreders yet.</p>
         </div>
         {% endif %}
     </div>
+
 {% endblock main %}
 
 {% block footer %}
 {% endblock footer %}
+
+{% block customJS %}
+<script>
+    // Add event listener for the "Load to cart" button
+    $('.load-to-cart').on('click', function() {
+        const orderId = $(this).data('order-id');
+        $.ajax({
+            url: `/check-order/${orderId}/`,
+            type: "POST",
+            data: {"csrf_token": "{{csrf_token()}}" },
+            success: function(response) {
+                if (response.status == 'success') {
+                    swal({
+                        text: "Order items had been loaded to cart.",
+                        icon: "success",
+                        button: false,
+                        timer: 1500,
+                    });
+                    const redirectTOCart = setInterval(() => {
+                        window.location.replace('/cart-details/');
+                    }, 2000);
+                    $('.cart_items_count').text(response.number_of_cart_items);
+                }
+            },
+            error: function(error) {
+                alert("Something went wrong.");
+            },
+        });
+    });
+
+    
+</script>
+{% endblock customJS %}

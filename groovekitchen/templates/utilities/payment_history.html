@@ -37,21 +37,21 @@
                         {% if payment.status == 'paid' or payment.status == 'failed' %}
                         <tr>
                           {% if payment.status == 'paid' %}
-                          <th scope="row"><button class="btn btn-success btn-sm">
-                            <i class="fa fa-check"></i></button>
+                          <th scope="row" class="text-success">
+                            <i class="fa fa-square-check"></i>
                           </th>
                           {% elif payment.status == 'failed' %}
-                          <th scope="row"><button class="btn btn-danger btn-sm">
-                            <i class="fa fa-xmark"></i></button>
+                          <th scope="row" class="text-danger">
+                            <i class="fa fa-square-xmark"></i>
                           </th>
                           {% endif %}
                           <td>{{payment.ref}}</td>
                           <td>{{payment.amount}}</td>
-                          <td>{{payment.date_paid.strftime("%A, %B %d, %Y %I:%M %p")}}</td>
+                          <td>{{payment.date_paid.strftime("%d/%m/%Y - %I:%M %p")}}</td>
                           {% if payment.status == 'paid' %}
-                          <td><span class="badge bg-success fs-6">Successful</span></td>
+                          <td><span class="badge bg-success">Successful</span></td>
                           {% elif payment.status == 'failed' %}
-                          <td><span class="badge bg-danger fs-6">Failed</span></td>
+                          <td><span class="badge bg-danger">Failed</span></td>
                           {% endif %}
                         </tr>
                         {% endif %}

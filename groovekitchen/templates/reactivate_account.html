@@ -16,10 +16,10 @@
                 <form action="{{url_for('reactivate_account')}}" method="post" novalidate>
                 <input type="hidden" name="csrf_token" value="{{csrf_token()}}">
                     <div class="form-floating mb-3">
-                        {{form.email(class='form-control noround', placeholder='Your Registered Email')}}
+                        {{form.email(class='form-control ', placeholder='Your Registered Email')}}
                         {{form.email.label}}
                     </div>
-                    <button type="button" class="btn btn-primary col-12 btn-lg noround" onclick="handleReactivation();">Reactivate</button>
+                    <button type="button" class="btn btn-primary col-12 btn-lg " onclick="handleReactivation();">Reactivate</button>
                 </form>
             </div>
         </div>

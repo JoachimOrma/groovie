@@ -11,7 +11,7 @@ from sqlalchemy import or_
 # from google.oauth2.credentials import Credentials
 from werkzeug.security import generate_password_hash, check_password_hash
 from groovekitchen import app
-from groovekitchen.models import db, Product, Cart, Customer, Chef, Caterer, Wishlist, Post, CommunityAgent, Comment, Like, Order, OrderItem
+from groovekitchen.models import db, Product, Cart, Customer, Chef, Caterer, Wishlist, MenuItem, Post, CommunityAgent, Comment, Like, Order, OrderItem, Menu
 from groovekitchen.forms import FormData
 
 
@@ -108,43 +108,24 @@ def pluralize(number, singular='', plural='s'):
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
-    if session.get('useronline'):
-        cid = session.get('useronline')
+    cid = session.get('useronline')
+    menu_items = MenuItem.query.all()
+    menu = Menu.query.all() 
+    if cid:
         customer = Customer.query.get_or_404(cid)
-        cart_items = Cart.query.filter_by(customerid=customer.id).all()
-        wishlist_items = Wishlist.query.filter_by(customerid=customer.id).all()
-        number_of_cart_items = len(cart_items)
-        number_of_wishlist_item = len(wishlist_items)
-    else:
-        number_of_cart_items = 0
-        number_of_wishlist_item = 0
-        customer = None
-    products = Product.query.filter(Product.status=='1').all()
-    chefs = Chef.query.filter(Chef.status=='1').all()
-    restaurants = [
-        {"name": 'Peaky Blinders', "image": 'restaurant1.jpg', "rating": 4.5},
-        {"name": 'House of El', "image": 'restaurant2.jpg', "rating": 4.0},
-        {"name": 'Latte Mall', "image": 'restaurant3.jpg', "rating": 4.7},
-        {"name": 'Foodie Mart', "image": 'restaurant4.jpg', "rating": 4.9},
-        {"name": 'Alexa & Katie', "image": 'restaurant5.jpg', "rating": 5.0},
-        {"name": 'Pizza Lounge', "image": 'restaurant6.jpg', "rating": 4.5},
-        {"name": 'Despirado Funs', "image": 'restaurant7.jpg', "rating": 4.3},
-        {"name": 'Mushin Shin Shin', "image": 'restaurant8.jpg', "rating": 5.0},
-        {"name": 'Island of Biu', "image": 'restaurant9.jpg', "rating": 4.6},
-    ]
-    menu = [
-        {"id": "rice", "name": 'Rice', "image": 'download1.jpg'},
-        {"id": "beans", "name": 'Beans', "image": 'download18.jpg'},
-        {"id": "spaghetti", "name": 'Spaghetti', "image": 'download21.webp'},
-        {"id": "noodle", "name": 'Noodle', "image": 'download4.jpg'},
-        {"id": "egusi", "name": 'Soup', "image": 'download5.jpg'},
-        {"id": "ewedu", "name": 'Ewedu', "image": 'download6.jpg'},
-        {"id": "afan", "name": 'Asian', "image": 'download7.jpg'},
-        {"id": "plantain", "name": 'Plantain', "image": 'download8.jpg'},        
-    ]
-    return render_template('index.html', title="Home", page="home", number_of_cart_items=number_of_cart_items, chefs=chefs, products=products,
-                           restaurants=restaurants, number_of_wishlist_item=number_of_wishlist_item, menu=menu, customer=customer)
-
+        number_of_cart_items = Cart.query.filter_by(customerid=customer.id).count() 
+    number_of_cart_items = 0
+    customer = None
+    random.shuffle(menu)
+    random.shuffle(menu_items)
+    return render_template('index.html',
+        title="Home",
+        page="home",
+        number_of_cart_items=number_of_cart_items,
+        menu_items=menu_items,
+        menu=menu,
+        customer=customer,
+    )
 
 @app.route('/index/', methods=['GET', 'POST'])
 def index():   
@@ -170,7 +151,6 @@ def logout():
 
 @app.route('/login/', methods=['GET', 'POST'])
 def login():
-    form = FormData()
     if request.method == 'POST':
         email = request.form.get('email')
         password = request.form.get('password')
@@ -218,6 +198,7 @@ def login():
                 return jsonify({"message": "Email doesn't match any record.", "status": "invalid_email"})
         else:
             return jsonify({"message": "field cannot be empty", "status": "error" })
+        form = FormData()
     return render_template('login.html', title='Login', form=form)
 
 
@@ -255,31 +236,33 @@ def login():
   # Registration route
 @app.route('/registration/', methods=['GET', 'POST'])
 def registration():
-    form = FormData()
-    if request.method == 'POST' and form.validate_on_submit():
+    if request.method == 'POST':
         firstname = request.form.get('firstname')
         lastname = request.form.get('lastname')
         email = request.form.get('email')
         password = request.form.get('password')
-        
-        existing_email = Customer.query.filter(Customer.email == email).first()
-        pwd_length = len(password)
-        if existing_email is not None:
-            return jsonify({"status": "email_taken"})
-        elif pwd_length < 8:
-            return jsonify({"status": "short_password"})
+        if firstname and lastname and email and password:
+            existing_email = Customer.query.filter(Customer.email == email).first()
+            pwd_length = len(password)
+            if existing_email is not None:
+                return jsonify({"status": "email_taken"})
+            elif pwd_length < 8:
+                return jsonify({"status": "short_password"})
+            else:
+                hash_pwd = generate_password_hash(password)
+                customer = Customer(
+                    firstname=firstname,
+                    lastname=lastname,
+                    email=email,
+                    password=hash_pwd
+                )
+                db.session.add(customer)
+                db.session.commit()
+                return jsonify({"page": "/login/"})
         else:
-            hash_pwd = generate_password_hash(password)
-            customer = Customer(
-                firstname=firstname,
-                lastname=lastname,
-                email=email,
-                password=hash_pwd
-            )
-            db.session.add(customer)
-            db.session.commit()
-            return jsonify({"page": "/login/"})
-            
+            return jsonify({"status": "error"})
+    else:
+        form = FormData()
     return render_template('registration.html', form=form, title="Registration")
 
 
@@ -350,7 +333,6 @@ def fast_orders():
         order_number = request.form.get('searchInput')
         if order_number:
             order = Order.query.filter_by(order_number=order_number).first()
-
             if order:
                 order_items = OrderItem.query.filter_by(orderid=order.id).all()
                 item_list = [{
@@ -366,33 +348,63 @@ def fast_orders():
         else:
             return jsonify({'status': 'error'})
     else:
-        if session.get('useronline'):
-            cid = session.get('useronline')
+        cid = session.get('useronline')
+        if cid:
             customer = Customer.query.get_or_404(cid)
-            cart_items = Cart.query.filter_by(customerid=customer.id).all()
-            number_of_cart_items = len(cart_items)
-            wishlist_items = Wishlist.query.filter_by(customerid=customer.id).all()
-            number_of_wishlist_item = len(wishlist_items)
-        else:
-            number_of_cart_items = 0
-            number_of_wishlist_item = 0
-            customer = None
-    return render_template('fast_orders.html', title='Load Order Items', page='fast_orders', number_of_cart_items=number_of_cart_items, number_of_wishlist_item=number_of_wishlist_item, customer=customer)
+            number_of_cart_items = Cart.query.filter_by(customerid=customer.id).count()
+        customer = None
+        number_of_cart_items = 0
+        text = "Enter order Id to load the order items to your cart."
+        search = "E.g: GK-OrderId-en5878786fg"
+    return render_template('fast_orders.html',
+        text=text,
+        search=search,
+        title='Load Order Items',
+        page='fast_orders',
+        number_of_cart_items=number_of_cart_items,
+        customer=customer
+    )
+
+
+@app.route('/check-order/<string:order_num>/', methods=['POST'])
+def check_order(order_num):
+    order_number = Order.query.filter_by(order_number=order_num).first()
+    if order_number:
+        order_items = OrderItem.query.filter_by(orderid=order_number.id).all()
+        for item in order_items:
+            return load_to_cart(item.orderid)
+
+
+@app.route('/load-to-cart/<int:id>', methods=['POST'])
+def load_to_cart(id):
+    cid = session.get('useronline')
+    customer = Customer.query.get_or_404(cid) if cid else None
+    order_items = OrderItem.query.filter_by(orderid=id).all()
+
+    if order_items:
+        cart_items = Cart.query.filter_by(customerid=customer.id).all()
+        if cart_items:
+            for item in cart_items:
+                db.session.delete(item)
+                db.session.commit()
+
+        for item in order_items:
+            new_cart_item = Cart(customerid=customer.id, productid=item.productid, quantity=item.quantity)
+            db.session.add(new_cart_item)
+            db.session.commit()
+
+        number_of_cart_items = Cart.query.filter_by(customerid=customer.id).count()
+    return jsonify({"status": "success", "number_of_cart_items": number_of_cart_items})
 
 
 @app.route('/about-us/')
 def about_us():
-    if session.get('useronline'):
-        cid = session.get('useronline')
+    cid = session.get('useronline')
+    if cid:
         customer = Customer.query.get_or_404(cid)
-        cart_items = Cart.query.filter_by(customerid=customer.id).all()
-        number_of_cart_items = len(cart_items)
-        wishlist_items = Wishlist.query.filter_by(customerid=customer.id).all()
-        number_of_wishlist_item = len(wishlist_items)
-    else:
-        number_of_cart_items = 0
-        number_of_wishlist_item = 0
-        customer = None
+        cart_items = Cart.query.filter_by(customerid=customer.id).count()
+    number_of_cart_items = 0
+    customer = None
     services = [
         {"name": 'Fast Orders', "logo": 'fa-cart-plus', "description": 'Top notch, bla bla bla bla'},
         {"name": 'Quality Food', "logo": 'fa-utensils', "description": 'Top notch, bla bla bla bla'},
@@ -406,46 +418,49 @@ def about_us():
             {"name": 'Phil Banks', "image": 'testimonial-3.jpg', "occupation": 'Lawyer'},
             {"name": 'Lucinda Kukka', "image": 'testimonial-4.jpg', "occupation": 'Human Resources'},
         ]
-    return render_template('about.html', title='About Us', page='about_us', services=services, testifiers=testifiers, number_of_cart_items=number_of_cart_items, number_of_wishlist_item=number_of_wishlist_item, customer=customer)
+    return render_template('about.html',
+        title='About Us',
+        page='about_us',
+        services=services,
+        testifiers=testifiers,
+        number_of_cart_items=number_of_cart_items,
+        customer=customer
+    )
 
 
 @app.route('/get-products/')
 def get_products():
-    try:
-        products = Product.query.filter_by(status='1').all()
-        if products:
-            random.shuffle(products)
-            product_list = [
-                {
-                    "id": product.id,
-                    "name": product.name,
-                    "image": product.image,
-                    "price": product.price,
-                } for product in products
-            ]
-            return jsonify({"status": "success", "product_list": product_list})
-        else:
-            return jsonify({"status": "not-found", "message": "No products found."})
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
+    products = Product.query.filter_by(status='1').all()
+    if products:
+        random.shuffle(products)
+        product_list = [{
+            "id": product.id,
+            "name": product.name,
+            "image": product.image,
+            "price": product.price,
+        } for product in products]
+        return jsonify({"status": "success", "product_list": product_list})
+    else:
+        return jsonify({"status": "not-found"})
 
 @app.route('/top-listing/', methods=['GET', 'POST'])
 def top_listings():
     if request.method == 'POST':
         search_input = request.form.get('searchInput')
         if search_input:
-            random.shuffle(products)
             products = Product.query.filter(
                 or_(
                     Product.name.ilike(f'%{search_input}%'),
                     Product.price.ilike(f'%{search_input}%'),
                 ), Product.status == '1').all()
             if products:
+                random.shuffle(products)
                 product_list = [{
                     "id": product.id,
                     "name": product.name,
                     "price": product.price,
                     "image": product.image,
+                    "onWishlist": product.wishlist_deets,
                 } for product in products]
 
                 return jsonify({"status": "success", "product_list": product_list})
@@ -454,41 +469,40 @@ def top_listings():
         else:
             return jsonify({"status": "error"})
     else:
-        if session.get('useronline'):
-            cid = session.get('useronline')
+        text = "Find your favourite meals, protiens, or juices."
+        search = "E.g: Korean rice, fruit juice, frilled fish"
+        cid = session.get('useronline')
+        if cid:
             customer = Customer.query.get_or_404(cid)
-            cart_items = Cart.query.filter_by(customerid=customer.id).all() or None
-            wishlist_items = Wishlist.query.filter_by(customerid=customer.id).all()
-            number_of_cart_items = len(cart_items) if cart_items else 0
-            number_of_wishlist_item = len(wishlist_items) if wishlist_items else 0
-        else:
-            number_of_cart_items = 0
-            number_of_wishlist_item = 0
-            customer = None
-    return render_template('top_listings.html', title="Top Listing", page='top-listing', customer=customer, number_of_cart_items=number_of_cart_items, number_of_wishlist_item=number_of_wishlist_item)
+            cart_items = Cart.query.filter_by(customerid=customer.id).count()
+        number_of_cart_items = 0
+        customer = None
+    return render_template('top_listings.html',
+        text=text,
+        search=search,
+        title="Top Listing",
+        page='top-listing',
+        customer=customer,
+        number_of_cart_items=number_of_cart_items
+    )
 
 
 @app.route('/product-details/<int:pid>/', methods=['GET', 'POST'])
 def product_details(pid):
-    if session.get('useronline'):
-        cid = session.get('useronline')
+    cid = session.get('useronline')
+    if cid:
         customer = Customer.query.get_or_404(cid)
-        cart_items_count = Cart.query.filter_by(customerid=customer.id).all()
-        number_of_cart_items = len(cart_items_count)
-        wishlist_items = Wishlist.query.filter_by(customerid=customer.id).all()
-        number_of_wishlist_item = len(wishlist_items)
-    else:
-        number_of_cart_items = 0
-        number_of_wishlist_item = 0
-        customer = None
+        number_of_cart_items = Cart.query.filter_by(customerid=customer.id).count()
+    number_of_cart_items = 0
+    customer = None
     pid = Product.query.filter(Product.id == pid).first()
     products = Product.query.all()
     return render_template('utilities/product_details.html', title='Product Details', product=pid, number_of_cart_items=number_of_cart_items,
-                        products=products, customer=customer, number_of_wishlist_item=number_of_wishlist_item)
+                        products=products, customer=customer)
 
 
-@app.route('/social-feed/', methods=['GET', 'POST'])
-def social_feed():
+@app.route('/community/', methods=['GET', 'POST'])
+def community():
     if session.get('useronline'):
         cid = session.get('useronline')
         customer = Customer.query.get_or_404(cid)
@@ -505,7 +519,7 @@ def social_feed():
     posts = Post.query.order_by(Post.date_posted.desc()).all()
     comments = Comment.query.all()
     likes = Like.query.all()
-    return render_template('social_feed.html', title="Social Feed", page='solical-feed', posts=posts, comments=comments, likes=likes, customer_on_list=customer_on_list,
+    return render_template('community.html', title="Groove Community", page='community', posts=posts, comments=comments, likes=likes, customer_on_list=customer_on_list,
                             customer=customer, number_of_cart_items=number_of_cart_items, number_of_wishlist_item=number_of_wishlist_item)
 
 

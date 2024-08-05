@@ -24,7 +24,7 @@
             </div>
             <div class="col-md-6 mt-3 d-flex flex-column ms-5 ms-md-0">
                 <span class="d-flex h6">
-                    {% if session.get('useronline') %} 
+                    {% if session.get('useronline') == chef.customerid %} 
                         <i class="fa-solid fa-circle online me-2" style="color: green; font-size: x-small;"></i> 
                     {% else %}
                     <i class="fa-solid fa-circle me-2" style="color: grey; font-size: x-small;"></i> 
@@ -122,28 +122,10 @@
             </div>
         </div>
         {% if chefs | length > 1 %}
-        <div class="row pt-5 pb-3">
-            <h2 class="text-center py-3 mb-5">Other Chef{{ chefs | pluralize }}</h2>
-            <div class="tab-content">
-                <div id="tab-1" class="tab-pane fade show p-0 active">
-                    <div class="row g-4 justify-content-center justify-content-md-start">
-                      {% for person in chefs %}
-                        {% if person.id != chef.id %}
-                          <div class="col-lg-3 col-md-6 col-11 wow fadeInUp" data-wow-delay="0.1s">
-                            <div class="card chef-card">
-                                <input type="hidden" class="chef-input" name="chefId" value="{{person.id}}" />
-                                <img src="/static/photos/{{ person.customer_deets.dp }}" alt="..." height="200" style="object-fit: cover;">
-                                <div class="footer p-2 d-flex flex-column text-center" style="font-size: small;">
-                                    <span class="h6">{{ person.customer_deets.firstname }} {{person.customer_deets.lastname}}</span>
-                                    <span class="card-text text-format" style="background: lavender; border-radius: 4px"> {{ person.specialities }}</span>
-                                    <span class="text-muted px-2" style="font-style: italic;"><i class="fas fa-location-dot text-warning"></i> {{person.city}}, {{person.state }} State</span>
-                                </div>
-                            </div>
-                          </div>
-                        {% endif %}
-                      {% endfor %}
-                    </div>
-                </div>
+        <div class="container">
+            <h2 class="py-3 my-5 bg-light" id="sub-title"></h2>
+            <div class="row g-4" id="chef-container">
+                
             </div>
         </div>
         {% endif %}
@@ -155,19 +137,61 @@
 
 {% block customJS %}
 <script>
-    const chefCards = document.querySelectorAll('.chef-card');
-
-    chefCards.forEach(card => {
-        card.addEventListener('click', () => {
-            const input = card.querySelector('.chef-input');
-            if (input) {
-            const chefId = input.value;
-            window.location.replace(`/chef-details/${chefId}/`);
-            }
-
-        });
+    //Fetching and displaying all chefs from the database
+    document.body.onload = function(){
+        $.getJSON({
+            url: "/get-chefs/",
+            success: function(response) {
+                if (response.status == "success") {
+                    const useronline = "{{session.get('useronline')}}"; 
+                    const current_chef = "{{chef.id}}";
+                    let chefHtml = "";
+                    $("#chef-container").empty();
     
-    });
+                    response.chef_list.forEach(chef => {
+                        // Determine online status icon
+                        let onlineStatusHtml = '';
+                        if (useronline == chef.customerid) {
+                            onlineStatusHtml = '<i class="fa-solid fa-circle online me-2" style="color: green; font-size: x-small;"></i>';
+                        } else {
+                            onlineStatusHtml = '<i class="fa-solid fa-circle me-2" style="color: grey; font-size: x-small;"></i>';
+                        }
+                        // Using the first letter of their lastname
+                        const lastname = chef.lastname ? chef.lastname[0] : '';
+                        if (current_chef != chef.id){
+                            chefHtml += `
+                                <div class="col-lg-3 col-md-4 col-6">
+                                    <a href="/chef-details/${chef.id}/" class="text-decoration-none">
+                                        <div class="card">
+                                            <input type="hidden" class="chef-input" name="chefId" value="${chef.id}" />
+                                            <img src="/static/photos/${chef.dp}" alt="${chef.firstname} ${lastname}'s profile picture" height="210" style="object-fit: cover;">
+                                            <div class="footer p-2 d-flex flex-column text-center" style="font-size: small;">
+                                                <span class="h6 d-flex align-items-center justify-content-center">
+                                                ${onlineStatusHtml}
+                                                ${chef.firstname} ${lastname}.
+                                                <img src="/static/photos/verify.png" width="16" class="ms-1" alt="Verified"/>
+                                                </span>
+                                                <span class="card-text text-format" style="background: lavender; border-radius: 4px"> ${chef.specialities}</span>
+                                                <span class="text-muted px-2" style="font-style: italic;"><i class="fas fa-location-dot text-warning"></i> ${chef.city}, ${chef.state} State</span>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </div>
+                            `;
+                        }
+                    });
+                    $("#chef-container").append(chefHtml);
+                    $("#sub-title").html("Other Chefs");
+    
+                } else if (response.status == "not-found"){
+                    $("#chef-container").html("<p class='d-flex justify-content-center'>No chefs found.</p>");
+                }
+            },
+            error: function(error) {
+                $("#chef-container").html("<p class='d-flex justify-content-center'>Something went wrong. Please, try again.</p>");
+            }
+        });
+    }  
 
     $('#book-button').click(function(e){
         e.preventDefault();
